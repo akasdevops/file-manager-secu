@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="fr" class="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FileManager Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .hover-lift {
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .gradient-progress {
+            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+        }
+
+        * {
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased h-screen flex overflow-hidden">
+
+    <!-- AUTHENTIFICATION -->
+    <div id="authScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md">
+        <div
+            class="bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-sm hover-lift">
+            <div class="flex items-center gap-3 mb-6">
+                <div
+                    class="p-3 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-2xl shadow-lg shadow-blue-500/30">
+                    <i data-lucide="cloud" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">FileManager</h1>
+                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Votre espace vivant & sécurisé</p>
+                </div>
+            </div>
+
+            <div id="authAlert"
+                class="hidden p-3 mb-4 text-xs font-semibold rounded-xl bg-red-100 text-red-700 border border-red-300 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800">
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Identifiant</label>
+                    <input type="text" id="authUsername"
+                        class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Mot de
+                        passe</label>
+                    <input type="password" id="authPassword"
+                        class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <button onclick="submitAuth()" id="authBtn"
+                    class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition shadow-lg shadow-blue-500/30 active:scale-95">
+                    Se Connecter
+                </button>
+            </div>
+
+            <div class="mt-5 text-center">
+                <button onclick="toggleAuthMode()" id="toggleBtn"
+                    class="text-xs font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition">
+                    Créer un nouveau compte
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- APPLICATION PRINCIPALE -->
+    <div id="appScreen" class="hidden w-full h-full flex">
+
+        <!-- SIDEBAR NAVIGATION -->
+        <aside
+            class="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-between shrink-0 shadow-sm">
+            <div>
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="p-2.5 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl shadow-md shadow-blue-500/30">
+                            <i data-lucide="cloud" class="w-5 h-5"></i>
+                        </div>
+                        <span
+                            class="font-extrabold text-slate-900 dark:text-white text-lg tracking-tight">FalieManager</span>
+                    </div>
+
+                    <!-- BOUTON INTERRUPTEUR THEME -->
+                    <button onclick="toggleTheme()"
+                        class="p-2.5 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition active:scale-90"
+                        title="Changer le thème">
+                        <i data-lucide="sun" id="themeIconSun" class="w-4 h-4 text-amber-500 hidden"></i>
+                        <i data-lucide="moon" id="themeIconMoon" class="w-4 h-4 text-indigo-400"></i>
+                    </button>
+                </div>
+
+                <nav class="space-y-2">
+                    <button onclick="showTab('files')" id="navFiles"
+                        class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-md shadow-blue-500/20 transition">
+                        <i data-lucide="folder" class="w-4 h-4"></i> Mes Fichiers
+                    </button>
+                    <button onclick="showTab('admin')" id="navAdmin"
+                        class="hidden w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition">
+                        <i data-lucide="shield" class="w-4 h-4 text-indigo-500"></i> Administration
+                    </button>
+                </nav>
+            </div>
+
+            <!-- QUOTA DISQUE EN DÉGRADÉ & PROFIL -->
+            <div class="space-y-4">
+                <div
+                    class="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
+                    <div class="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
+                        <span>Stockage utilisé</span>
+                        <span id="quotaText" class="font-mono text-blue-600 dark:text-blue-400">0 / 0 MB</span>
+                    </div>
+                    <div class="w-full bg-slate-200 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden p-0.5">
+                        <div id="quotaBar"
+                            class="gradient-progress h-full rounded-full w-0 transition-all duration-500"></div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800">
+                    <div class="flex items-center gap-3 truncate">
+                        <div
+                            class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-sm shadow-md">
+                            <span id="avatarChar">U</span>
+                        </div>
+                        <div class="truncate">
+                            <p id="profName" class="text-xs font-bold text-slate-900 dark:text-white truncate">User</p>
+                            <p id="profRole"
+                                class="text-[10px] text-blue-600 dark:text-blue-400 font-extrabold uppercase tracking-wider">
+                                ROLE</p>
+                        </div>
+                    </div>
+                    <button onclick="logout()"
+                        class="p-2 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/50 transition active:scale-95"
+                        title="Déconnexion">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CONTENU PRINCIPAL -->
+        <main class="flex-1 bg-slate-100/60 dark:bg-slate-950 p-8 overflow-y-auto">
+
+            <!-- TAB FICHIERS -->
+            <section id="tabFilesSection">
+
+                <!-- HEADER & RECHERCHE -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Explorateur
+                        </h2>
+                        <div id="breadcrumb"
+                            class="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
+                            /</div>
+                    </div>
+                    <div class="relative">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3 text-slate-400"></i>
+                        <input type="text" id="searchInput" onkeyup="filterFiles()"
+                            placeholder="Rechercher un fichier..."
+                            class="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-white outline-none focus:border-blue-500 w-64 shadow-sm transition">
+                    </div>
+                </div>
+
+                <!-- BADGES STATISTIQUES VIBRANTS -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <div
+                        class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4 hover-lift">
+                        <div class="p-3 bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl"><i
+                                data-lucide="file" class="w-6 h-6"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Total Fichiers</p>
+                            <p id="statCount" class="text-xl font-extrabold text-slate-900 dark:text-white">0</p>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4 hover-lift">
+                        <div
+                            class="p-3 bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 rounded-xl">
+                            <i data-lucide="folder" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Dossiers</p>
+                            <p id="statFolders" class="text-xl font-extrabold text-slate-900 dark:text-white">0</p>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4 hover-lift">
+                        <div
+                            class="p-3 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                            <i data-lucide="hard-drive" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Taille Totale</p>
+                            <p id="statSize" class="text-xl font-extrabold text-slate-900 dark:text-white">0 MB</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BARRE D'ACTIONS -->
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="folderInput" placeholder="Nom du dossier..."
+                            class="px-4 py-2.5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-white outline-none focus:border-blue-500 w-48 shadow-sm">
+                        <button onclick="createFolder()"
+                            class="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-xl text-xs font-bold transition active:scale-95 shadow-sm">
+                            + Créer dossier
+                        </button>
+                    </div>
+
+                    <label
+                        class="cursor-pointer px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-extrabold rounded-xl transition shadow-md shadow-blue-500/30 flex items-center gap-2 active:scale-95">
+                        <i data-lucide="upload-cloud" class="w-4 h-4"></i> Téléverser des fichiers
+                        <input type="file" id="fileInput" multiple class="hidden" onchange="uploadFiles(this.files)">
+                    </label>
+                </div>
+
+                <!-- ZONE DRAG & DROP -->
+                <div id="dropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
+                    ondrop="handleDrop(event)"
+                    class="border-2 border-dashed border-blue-400/60 dark:border-blue-500/40 bg-blue-50/50 dark:bg-blue-950/20 rounded-2xl p-6 text-center cursor-pointer mb-6 transition hover:border-blue-500 hover:bg-blue-50">
+                    <p class="text-xs font-bold text-blue-700 dark:text-blue-300">Glissez-déposez vos documents
+                        directement ici</p>
+                </div>
+
+                <!-- LISTE DE FICHIERS AVEC HIGH-CONTRAST & COULEURS -->
+                <div
+                    class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                    <table class="w-full text-left border-collapse">
+                        <thead
+                            class="bg-slate-100 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300 uppercase tracking-wider font-extrabold">
+                            <tr>
+                                <th class="p-4">Nom</th>
+                                <th class="p-4">Taille</th>
+                                <th class="p-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fileList"
+                            class="divide-y divide-slate-200 dark:divide-slate-800 text-xs font-medium"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TAB ADMIN -->
+            <section id="tabAdminSection" class="hidden space-y-6">
+                <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Administration</h2>
+
+                <div
+                    class="bg-white dark:bg-slate-900 p-6 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm space-y-4">
+                    <h3 class="font-extrabold text-xs text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">🔒
+                        Sécurité du Compte</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <input type="password" id="oldPass" placeholder="Ancien mot de passe"
+                            class="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white">
+                        <input type="password" id="newPass" placeholder="Nouveau mot de passe"
+                            class="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white">
+                        <button onclick="changePassword()"
+                            class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 rounded-xl text-xs font-bold transition active:scale-95 shadow-md">Mettre
+                            à jour</button>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-white dark:bg-slate-900 p-6 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm space-y-4">
+                    <h3 class="font-extrabold text-xs text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">⚙️
+                        Paramètres système</h3>
+                    <div class="flex items-center gap-6">
+                        <label
+                            class="flex items-center gap-3 text-xs text-slate-900 dark:text-slate-100 font-bold cursor-pointer">
+                            <input type="checkbox" id="setPublic" onchange="updateSettings()"
+                                class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"> Inscriptions
+                            ouvertes
+                        </label>
+                        <label
+                            class="flex items-center gap-3 text-xs text-slate-900 dark:text-slate-100 font-bold cursor-pointer">
+                            <input type="checkbox" id="setApproval" onchange="updateSettings()"
+                                class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"> Approbation
+                            manuelle des comptes
+                        </label>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                    <table class="w-full text-left border-collapse">
+                        <thead
+                            class="bg-slate-100 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300 uppercase tracking-wider font-extrabold">
+                            <tr>
+                                <th class="p-4">Utilisateur</th>
+                                <th class="p-4">Rôle</th>
+                                <th class="p-4">Statut</th>
+                                <th class="p-4">Stockage</th>
+                                <th class="p-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userList"
+                            class="divide-y divide-slate-200 dark:divide-slate-800 text-xs font-semibold"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL DE PREVIEW -->
+    <div id="previewModal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-4">
+        <div
+            class="relative bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-3xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+            <div
+                class="flex items-center justify-between p-4 px-6 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+                <h3 id="modalTitle" class="text-sm font-extrabold text-slate-900 dark:text-white truncate pr-4">
+                    Visualisation</h3>
+                <button onclick="closePreview()"
+                    class="p-1.5 text-slate-500 hover:text-slate-900 dark:hover:text-white rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition"><i
+                        data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div id="modalContent" class="flex-1 p-6 overflow-auto flex items-center justify-center min-h-[300px]">
+            </div>
+        </div>
+    </div>
+    <!-- 🚀 TABLEAU DE BORD RACINE (Visible uniquement à la racine) -->
+    <div id="root-dashboard" class="hidden mb-8 space-y-6">
+
+        <!-- 1. En-tête de bienvenue & Quota -->
+        <div
+            class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-2xl shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h2 class="text-2xl font-bold">Bienvenue sur votre Cloud ☁️</h2>
+                <p class="text-blue-100 text-sm mt-1">Espace de stockage NAS connecté et sécurisé.</p>
+            </div>
+
+            <!-- Widget Stockage -->
+            <div class="bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20 w-full md:w-72">
+                <div class="flex justify-between text-xs font-semibold mb-1">
+                    <span>Stockage Utilisé</span>
+                    <span id="dash-quota-text">0 MB / 500 MB</span>
+                </div>
+                <div class="w-full bg-white/20 rounded-full h-2 overflow-hidden">
+                    <div id="dash-quota-bar" class="bg-emerald-400 h-full rounded-full transition-all duration-500"
+                        style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Raccourcis / Filtres rapides -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <button onclick="filterByCategory('images')"
+                class="p-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl flex items-center gap-3 transition">
+                <span class="p-2 bg-purple-500/10 text-purple-400 rounded-lg">🖼️</span>
+                <div class="text-left">
+                    <p class="text-xs text-slate-400">Filtre</p>
+                    <p class="text-sm font-semibold text-slate-200">Images</p>
+                </div>
+            </button>
+
+            <button onclick="filterByCategory('documents')"
+                class="p-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl flex items-center gap-3 transition">
+                <span class="p-2 bg-blue-500/10 text-blue-400 rounded-lg">📄</span>
+                <div class="text-left">
+                    <p class="text-xs text-slate-400">Filtre</p>
+                    <p class="text-sm font-semibold text-slate-200">Documents</p>
+                </div>
+            </button>
+
+            <button onclick="filterByCategory('media')"
+                class="p-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl flex items-center gap-3 transition">
+                <span class="p-2 bg-pink-500/10 text-pink-400 rounded-lg">🎬</span>
+                <div class="text-left">
+                    <p class="text-xs text-slate-400">Filtre</p>
+                    <p class="text-sm font-semibold text-slate-200">Médias</p>
+                </div>
+            </button>
+
+            <button onclick="filterByCategory('all')"
+                class="p-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl flex items-center gap-3 transition">
+                <span class="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg">📂</span>
+                <div class="text-left">
+                    <p class="text-xs text-slate-400">Afficher</p>
+                    <p class="text-sm font-semibold text-slate-200">Tout voir</p>
+                </div>
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        let token = localStorage.getItem('token');
+        let user = JSON.parse(localStorage.getItem('user') || '{}');
+        let isRegister = false;
+        let currentPath = '';
+        let allItems = [];
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeIcons(isDark);
+        }
+
+        function updateThemeIcons(isDark) {
+            document.getElementById('themeIconSun').classList.toggle('hidden', !isDark);
+            document.getElementById('themeIconMoon').classList.toggle('hidden', isDark);
+        }
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const isDark = savedTheme === 'dark';
+            if (isDark) document.documentElement.classList.add('dark');
+            else document.documentElement.classList.remove('dark');
+            updateThemeIcons(isDark);
+        }
+
+        function init() {
+            initTheme();
+            lucide.createIcons();
+            if (token) {
+                document.getElementById('authScreen').classList.add('hidden');
+                document.getElementById('appScreen').classList.remove('hidden');
+                document.getElementById('profName').innerText = user.username || 'User';
+                document.getElementById('profRole').innerText = user.role || 'USER';
+                document.getElementById('avatarChar').innerText = (user.username || 'U').charAt(0).toUpperCase();
+
+                if (user.role === 'ADMIN') document.getElementById('navAdmin').classList.remove('hidden');
+                loadFiles();
+            }
+        }
+
+        function toggleAuthMode() {
+            isRegister = !isRegister;
+            document.getElementById('authBtn').innerText = isRegister ? "S'inscrire" : "Se Connecter";
+            document.getElementById('toggleBtn').innerText = isRegister ? "Déjà un compte ? Se connecter" : "Créer un nouveau compte";
+        }
+
+        async function submitAuth() {
+            const alertBox = document.getElementById('authAlert');
+            alertBox.classList.add('hidden');
+
+            const res = await fetch(isRegister ? '/api/auth/register' : '/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: document.getElementById('authUsername').value, password: document.getElementById('authPassword').value })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                if (isRegister) { alert(data.message); toggleAuthMode(); }
+                else {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    location.reload();
+                }
+            } else {
+                alertBox.innerText = data.error;
+                alertBox.classList.remove('hidden');
+            }
+        }
+
+        function logout() { localStorage.clear(); location.reload(); }
+
+        async function loadFiles(path = '') {
+            currentPath = path;
+            const res = await fetch(`/api/files/browse?path=${encodeURIComponent(path)}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            const data = await res.json();
+            allItems = data.items || [];
+
+            const usedMB = (data.usedBytes / (1024 * 1024)).toFixed(1);
+            const quotaMB = (data.quotaBytes / (1024 * 1024)).toFixed(0);
+            const pct = Math.min(100, (data.usedBytes / data.quotaBytes) * 100);
+
+            document.getElementById('quotaText').innerText = `${usedMB} / ${quotaMB} MB`;
+            document.getElementById('quotaBar').style.width = `${pct}%`;
+
+            // Statistiques rapides
+            document.getElementById('statCount').innerText = allItems.filter(i => !i.isDirectory).length;
+            document.getElementById('statFolders').innerText = allItems.filter(i => i.isDirectory).length;
+            document.getElementById('statSize').innerText = `${usedMB} MB`;
+
+            // Fil d'Ariane
+            const parts = path.split('/').filter(Boolean);
+            let breadcrumbHTML = `<span class="cursor-pointer text-blue-600 dark:text-blue-400 font-extrabold hover:underline" onclick="loadFiles('')">Racine</span>`;
+            let accum = '';
+            parts.forEach((p) => {
+                accum += (accum ? '/' : '') + p;
+                const target = accum;
+                breadcrumbHTML += ` <span class="text-slate-400">/</span> <span class="cursor-pointer text-slate-900 dark:text-white font-extrabold hover:text-blue-600 transition" onclick="loadFiles('${target}')">${p}</span>`;
+            });
+            document.getElementById('breadcrumb').innerHTML = breadcrumbHTML;
+
+            renderFileList(allItems, data.parentPath);
+        }
+
+        // Badges d'icônes vivement colorés selon le type de fichier
+        function getFileBadge(name, isDirectory) {
+            if (isDirectory)
+                return `<span class="p-2 rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 inline-block"><i data-lucide="folder" class="w-4 h-4"></i></span>`;
+
+            const ext = name.split('.').pop().toLowerCase();
+
+            if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext))
+                return `<span class="p-2 rounded-xl bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 inline-block"><i data-lucide="image" class="w-4 h-4"></i></span>`;
+            if (['pdf'].includes(ext))
+                return `<span class="p-2 rounded-xl bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 inline-block"><i data-lucide="file-text" class="w-4 h-4"></i></span>`;
+            if (['js', 'html', 'css', 'json', 'py'].includes(ext))
+                return `<span class="p-2 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 inline-block"><i data-lucide="code" class="w-4 h-4"></i></span>`;
+            if (['mp3', 'wav', 'mp4', 'mkv', 'mov'].includes(ext))
+                return `<span class="p-2 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 inline-block"><i data-lucide="video" class="w-4 h-4"></i></span>`;
+
+            return `<span class="p-2 rounded-xl bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 inline-block"><i data-lucide="file" class="w-4 h-4"></i></span>`;
+        }
+
+        function renderFileList(items, parentPath) {
+            const tbody = document.getElementById('fileList');
+            tbody.innerHTML = '';
+
+            if (parentPath !== null && parentPath !== undefined) {
+                tbody.innerHTML += `
+        <tr class="hover:bg-blue-50/50 dark:hover:bg-slate-800/60 transition cursor-pointer" onclick="loadFiles('${parentPath}')">
+          <td colspan="3" class="p-3.5 text-blue-600 dark:text-blue-400 font-bold flex items-center gap-2">
+            <span class="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/40"><i data-lucide="arrow-left" class="w-4 h-4"></i></span> Dossier parent
+          </td>
+        </tr>`;
+            }
+
+            if (items.length === 0) {
+                tbody.innerHTML += `<tr><td colspan="3" class="p-8 text-center text-slate-500 dark:text-slate-400 text-xs font-bold">Aucun fichier dans ce dossier.</td></tr>`;
+                lucide.createIcons();
+                return;
+            }
+
+            items.forEach(item => {
+                const full = currentPath ? `${currentPath}/${item.name}` : item.name;
+                const sizeText = item.isDirectory ? '-' : (item.size > 1024 * 1024 ? (item.size / (1024 * 1024)).toFixed(1) + ' MB' : (item.size / 1024).toFixed(1) + ' KB');
+
+                tbody.innerHTML += `
+        <tr class="hover:bg-slate-100/70 dark:hover:bg-slate-800/50 transition">
+          <td class="p-3.5 font-bold text-slate-900 dark:text-white">
+            <div class="flex items-center gap-3">
+              ${getFileBadge(item.name, item.isDirectory)}
+              <span class="${item.isDirectory ? 'cursor-pointer font-extrabold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition' : ''}" 
+                    ${item.isDirectory ? `onclick="loadFiles('${full}')"` : ''}>
+                    ${item.name}
+              </span>
+            </div>
+          </td>
+          <td class="p-3.5 text-slate-600 dark:text-slate-400 font-mono text-xs font-bold">${sizeText}</td>
+          <td class="p-3.5 text-right space-x-1.5">
+            ${!item.isDirectory ? `<button onclick="previewFile('${full}', '${item.name}')" class="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/30 rounded-xl text-xs font-bold transition active:scale-95">Aperçu</button>` : ''}
+            ${!item.isDirectory ? `<button onclick="downloadFile('${full}')" class="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/20 dark:text-emerald-300 dark:hover:bg-emerald-500/30 rounded-xl text-xs font-bold transition active:scale-95">Télécharger</button>` : ''}
+            <button onclick="deleteItem('${full}')" class="px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/30 rounded-xl text-xs font-bold transition active:scale-95">Supprimer</button>
+          </td>
+        </tr>`;
+            });
+
+            lucide.createIcons();
+        }
+
+        function filterFiles() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            renderFileList(allItems.filter(i => i.name.toLowerCase().includes(q)), null);
+        }
+
+        async function uploadFiles(files) {
+            if (!files || files.length === 0) return;
+            const fd = new FormData();
+            fd.append('folderPath', currentPath);
+            for (let f of files) fd.append('files', f);
+
+            const res = await fetch('/api/files/upload', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                body: fd
+            });
+            if (!res.ok) alert((await res.json()).error);
+            loadFiles(currentPath);
+        }
+
+        function handleDragOver(e) { e.preventDefault(); }
+        function handleDragLeave(e) { e.preventDefault(); }
+        function handleDrop(e) {
+            e.preventDefault();
+            if (e.dataTransfer.files?.length) uploadFiles(e.dataTransfer.files);
+        }
+
+        async function createFolder() {
+            const name = document.getElementById('folderInput').value;
+            if (!name) return;
+            await fetch('/api/files/folder', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ parentPath: currentPath, folderName: name })
+            });
+            document.getElementById('folderInput').value = '';
+            loadFiles(currentPath);
+        }
+
+        function downloadFile(filePath) {
+            window.location.href = `/api/files/download?filePath=${encodeURIComponent(filePath)}&token=${localStorage.getItem('token')}`;
+        }
+
+        async function deleteItem(itemPath) {
+            if (!confirm('Supprimer cet élément ?')) return;
+            await fetch('/api/files', {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ itemPath })
+            });
+            loadFiles(currentPath);
+        }
+
+        async function previewFile(filePath, fileName) {
+            const modal = document.getElementById('previewModal');
+            const modalContent = document.getElementById('modalContent');
+            document.getElementById('modalTitle').innerText = fileName;
+            modalContent.innerHTML = `<p class="text-xs font-bold text-slate-500">Chargement...</p>`;
+            modal.classList.remove('hidden');
+
+            const fileUrl = `/api/files/download?filePath=${encodeURIComponent(filePath)}&preview=true&token=${localStorage.getItem('token')}`;
+            const ext = fileName.split('.').pop().toLowerCase();
+
+            if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext)) {
+                modalContent.innerHTML = `<img src="${fileUrl}" class="max-h-[65vh] max-w-full rounded-2xl object-contain shadow-md" />`;
+            } else if (['mp4', 'webm'].includes(ext)) {
+                modalContent.innerHTML = `<video src="${fileUrl}" controls class="max-h-[65vh] w-full rounded-2xl"></video>`;
+            } else if (['pdf'].includes(ext)) {
+                modalContent.innerHTML = `<iframe src="${fileUrl}" class="w-full h-[65vh] rounded-2xl border-0"></iframe>`;
+            } else if (['txt', 'js', 'json', 'html', 'css', 'py'].includes(ext)) {
+                const res = await fetch(fileUrl);
+                const text = await res.text();
+                modalContent.innerHTML = `<pre class="w-full p-4 bg-slate-900 text-slate-100 text-xs font-mono rounded-2xl overflow-x-auto border border-slate-800 max-h-[65vh]">${text.replace(/</g, "&lt;")}</pre>`;
+            } else {
+                modalContent.innerHTML = `<div class="text-center space-y-3"><p class="text-xs text-slate-500 font-bold">Aperçu direct non disponible pour ce type de fichier.</p><button onclick="downloadFile('${filePath}')" class="px-4 py-2 bg-blue-600 text-white text-xs rounded-xl font-bold shadow-md shadow-blue-500/20">Télécharger le fichier</button></div>`;
+            }
+        }
+
+        function closePreview() { document.getElementById('previewModal').classList.add('hidden'); }
+
+        function showTab(tab) {
+            document.getElementById('tabFilesSection').classList.toggle('hidden', tab !== 'files');
+            document.getElementById('tabAdminSection').classList.toggle('hidden', tab !== 'admin');
+            if (tab === 'admin') loadAdminData();
+        }
+
+        async function loadAdminData() {
+            const currentToken = localStorage.getItem('token');
+            try {
+                const resSet = await fetch('/api/admin/settings', { headers: { 'Authorization': `Bearer ${currentToken}` } });
+                if (resSet.ok) {
+                    const set = await resSet.json();
+                    document.getElementById('setPublic').checked = !!set.allowPublicRegister;
+                    document.getElementById('setApproval').checked = !!set.requireAdminApproval;
+                }
+                const resUsers = await fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${currentToken}` } });
+                if (!resUsers.ok) return;
+
+                const users = await resUsers.json();
+                const tbody = document.getElementById('userList');
+                tbody.innerHTML = '';
+
+                users.forEach(u => {
+                    const isApproved = u.status === 'APPROVED';
+                    const isLoggedUser = user.username && user.username.toLowerCase() === u.username.toLowerCase();
+
+                    tbody.innerHTML += `
+          <tr class="p-3.5 border-b border-slate-200 dark:border-slate-800">
+            <td class="p-3.5 font-bold text-slate-900 dark:text-white">${u.username}</td>
+            <td class="p-3.5"><span class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-300">${u.role}</span></td>
+            <td class="p-3.5"><span class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg ${isApproved ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300'}">${u.status}</span></td>
+            <td class="p-3.5 text-xs font-mono font-bold text-slate-600 dark:text-slate-400">${(u.usedBytes / (1024 * 1024)).toFixed(1)} / ${u.quotaMB} MB</td>
+            <td class="p-3.5 text-right space-x-1.5">
+              ${(!isApproved) ? `<button onclick="updateUserStatus('${u.id}', 'APPROVED')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg shadow-sm">Approuver</button>` : ''}
+              ${(isApproved && !isLoggedUser) ? `<button onclick="updateUserStatus('${u.id}', 'DISABLED')" class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold rounded-lg shadow-sm">Désactiver</button>` : ''}
+              ${!isLoggedUser ? `<button onclick="deleteUser('${u.id}', '${u.username}')" class="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold rounded-lg shadow-sm">Supprimer</button>` : ''}
+            </td>
+          </tr>`;
+                });
+            } catch (e) { }
+        }
+
+        async function updateSettings() {
+            await fetch('/api/admin/settings', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ allowPublicRegister: document.getElementById('setPublic').checked, requireAdminApproval: document.getElementById('setApproval').checked })
+            });
+        }
+
+        async function updateUserStatus(id, status) {
+            const res = await fetch(`/api/admin/users/${id}/status`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            });
+            if (res.ok) loadAdminData();
+        }
+
+        async function deleteUser(id, username) {
+            if (!confirm(`Supprimer définitivement ${username} ?`)) return;
+            const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+            if (res.ok) loadAdminData();
+        }
+
+        async function changePassword() {
+            const oldPassword = document.getElementById('oldPass').value;
+            const newPassword = document.getElementById('newPass').value;
+            if (!oldPassword || !newPassword) return alert("Champs incomplets.");
+
+            const res = await fetch('/api/user/change-password', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ oldPassword, newPassword })
+            });
+            const data = await res.json();
+            alert(data.message || data.error);
+            if (res.ok) { document.getElementById('oldPass').value = ''; document.getElementById('newPass').value = ''; }
+        }
+        function renderExplorer(data, currentPath) {
+            const dashboardEl = document.getElementById('root-dashboard');
+
+            // 🎯 Si on est à la racine (''), on affiche le Dashboard
+            if (!currentPath || currentPath === '') {
+                dashboardEl.classList.remove('hidden');
+
+                // Mise à jour du widget de stockage
+                const usedMB = (data.usedBytes / (1024 * 1024)).toFixed(1);
+                const quotaMB = (data.quotaBytes / (1024 * 1024)).toFixed(0);
+                const percent = Math.min(100, ((data.usedBytes / data.quotaBytes) * 100)).toFixed(1);
+
+                document.getElementById('dash-quota-text').innerText = `${usedMB} MB / ${quotaMB} MB`;
+                document.getElementById('dash-quota-bar').style.width = `${percent}%`;
+            } else {
+                // 🎯 Si on est dans un sous-dossier, on masque le Dashboard pour garder une vue épurée
+                dashboardEl.classList.add('hidden');
+            }
+
+            // Rendu de la liste des fichiers/dossiers
+            renderFileList(data.items);
+        }
+
+        // 🔍 Fonction de filtrage par catégorie
+        function filterByCategory(category) {
+            const rows = document.querySelectorAll('.file-row'); // Classe sur vos lignes <tr> de tableau
+
+            rows.forEach(row => {
+                const fileName = row.dataset.filename.toLowerCase();
+                const isDir = row.dataset.isdir === 'true';
+
+                if (category === 'all' || isDir) {
+                    row.style.display = '';
+                    return;
+                }
+
+                const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(fileName);
+                const isDoc = /\.(pdf|doc|docx|txt|md|xls|xlsx)$/i.test(fileName);
+                const isMedia = /\.(mp4|mkdir|mp3|avi|mov)$/i.test(fileName);
+
+                if (category === 'images' && isImage) row.style.display = '';
+                else if (category === 'documents' && isDoc) row.style.display = '';
+                else if (category === 'media' && isMedia) row.style.display = '';
+                else row.style.display = 'none';
+            });
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
