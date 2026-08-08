@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  cloudspace:
+    build: .
+    container_name: cloudspace_app
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    volumes:
+      - ./uploads:/app/uploads
+      - ./users.json:/app/users.json
+    restart: unless-stopped

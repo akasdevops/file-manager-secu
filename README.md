@@ -63,8 +63,10 @@ cloudspace-pro/
 ├── public/
 │   └── index.html       # Interface principale (Frontend)
 ├── src/
-│   ├── routes/          # Routes API (auth, files, admin, user)
+│   ├── config/
 │   ├── middleware/      # Authentification JWT, vérification des rôles
+│   ├── routes/          # Routes API (auth, files, admin, user)
+│   ├── utils/          
 │   └── server.js        # Point d'entrée de l'application Express
 ├── uploads/             # Dossier de stockage des fichiers utilisateur
 ├── .env                 # Variables d'environnement
