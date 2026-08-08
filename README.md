@@ -60,15 +60,30 @@ npm install
 ### 4. Structure des dossiers
 ```text
 cloudspace-pro/
+├── uploads/                # Stockage physique des fichiers téléversés
+├── data/                   # Stockage des données BDD
+│   └── users.json          # Base de données locale (Fichier JSON)
 ├── public/
-│   └── index.html       # Interface principale (Frontend)
-├── src/│        
-│   └── server.js        # Point d'entrée de l'application Express
-├── uploads/             # Dossier de stockage des fichiers utilisateur
-├── data/                # Dossier de stockage des données BDD
-├── .env                 # Variables d'environnement
-├── package.json
-└── README.md
+│   └── index.html          # Frontend (UI & Logique client)
+├── src/
+│   ├── server.js           # Helpers réutilisables
+│   ├── config/             # Configuration globale
+│   │   └── database.js     # Gestion de la lecture/écriture dans users.json
+│   ├── middlewares/        # Sécurité et contrôle d'accès
+│   │   ├── auth.js         # Vérification du token JWT
+│   │   └── admin.js        # Vérification du rôle ADMIN
+│   ├── routes/             # Découpage des endpoints API
+│   │   ├── auth.routes.js  # /api/auth (Login, Register)
+│   │   ├── files.routes.js # /api/files (Upload, Browse, Delete, Download)
+│   │   ├── admin.routes.js # /api/admin (Gestion des utilisateurs & système)
+│   │   └── user.routes.js  # /api/user (Changement de mot de passe)
+│   └── utils/              # Helpers réutilisables
+│       └── storage.js      # Configuration de Multer pour les uploads
+├── uploads/                # Stockage physique des fichiers téléversés
+├── .env                    # Clé secrète JWT & variables d'environnement
+├── package.json            # Dépendances Node.js
+└── README.md               # Documentation du projet
+
 ```
 
 ### 5. Démarrer le serveur
