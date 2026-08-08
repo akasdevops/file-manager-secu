@@ -12,10 +12,12 @@
             theme: {
                 extend: {
                     colors: {
-                        accent: {
-                            50: '#f0f9ff',
-                            500: '#0284c7',
-                            600: '#0369a1',
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
                         }
                     }
                 }
@@ -28,72 +30,68 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
-        /* Animations & Effets de vie */
         .hover-lift {
             transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
         }
 
         .hover-lift:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
         }
 
         .gradient-progress {
-            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
         }
 
-        /* Transition fluide pour le changement de thème */
         * {
-            transition: background-color 0.25s ease, border-color 0.25s ease;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
         }
     </style>
 </head>
 
 <body
-    class="bg-slate-50/80 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased h-screen flex overflow-hidden">
+    class="bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased h-screen flex overflow-hidden">
 
     <!-- AUTHENTIFICATION -->
-    <div id="authScreen"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 dark:bg-slate-950/80 backdrop-blur-md">
+    <div id="authScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md">
         <div
-            class="bg-white/90 dark:bg-slate-900/90 p-8 rounded-3xl shadow-2xl border border-white/40 dark:border-slate-800 w-full max-w-sm hover-lift">
+            class="bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-sm hover-lift">
             <div class="flex items-center gap-3 mb-6">
                 <div
-                    class="p-3 bg-gradient-to-tr from-blue-600 to-violet-600 text-white rounded-2xl shadow-lg shadow-blue-500/30">
-                    <i data-lucide="cloud"></i>
+                    class="p-3 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-2xl shadow-lg shadow-blue-500/30">
+                    <i data-lucide="cloud" class="w-6 h-6"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">CloudSpace</h1>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Votre espace vivant & sécurisé</p>
+                    <h1 class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">CloudSpace</h1>
+                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Votre espace vivant & sécurisé</p>
                 </div>
             </div>
 
             <div id="authAlert"
-                class="hidden p-3 mb-4 text-xs rounded-xl bg-red-50 text-red-600 border border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20">
+                class="hidden p-3 mb-4 text-xs font-semibold rounded-xl bg-red-100 text-red-700 border border-red-300 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800">
             </div>
 
             <div class="space-y-4">
                 <div>
-                    <label
-                        class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Identifiant</label>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Identifiant</label>
                     <input type="text" id="authUsername"
-                        class="w-full px-4 py-2.5 bg-slate-100/70 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40">
+                        class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:border-blue-500">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Mot de
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Mot de
                         passe</label>
                     <input type="password" id="authPassword"
-                        class="w-full px-4 py-2.5 bg-slate-100/70 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40">
+                        class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:border-blue-500">
                 </div>
                 <button onclick="submitAuth()" id="authBtn"
-                    class="w-full py-3 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-semibold text-sm rounded-xl transition shadow-md shadow-slate-900/10 active:scale-95">
+                    class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition shadow-lg shadow-blue-500/30 active:scale-95">
                     Se Connecter
                 </button>
             </div>
 
             <div class="mt-5 text-center">
                 <button onclick="toggleAuthMode()" id="toggleBtn"
-                    class="text-xs text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 font-medium transition">
+                    class="text-xs font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition">
                     Créer un nouveau compte
                 </button>
             </div>
@@ -105,35 +103,35 @@
 
         <!-- SIDEBAR NAVIGATION -->
         <aside
-            class="w-64 bg-white/80 dark:bg-slate-900/90 backdrop-blur-md border-r border-slate-200/80 dark:border-slate-800/80 p-6 flex flex-col justify-between shrink-0">
+            class="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-between shrink-0 shadow-sm">
             <div>
                 <div class="flex items-center justify-between mb-8">
                     <div class="flex items-center gap-3">
                         <div
-                            class="p-2.5 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl shadow-md shadow-blue-500/20">
-                            <i data-lucide="cloud" class="w-4 h-4"></i>
+                            class="p-2.5 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl shadow-md shadow-blue-500/30">
+                            <i data-lucide="cloud" class="w-5 h-5"></i>
                         </div>
                         <span
-                            class="font-bold text-slate-900 dark:text-white text-base tracking-tight">CloudSpace</span>
+                            class="font-extrabold text-slate-900 dark:text-white text-lg tracking-tight">CloudSpace</span>
                     </div>
 
                     <!-- BOUTON INTERRUPTEUR THEME -->
                     <button onclick="toggleTheme()"
-                        class="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-90"
-                        title="Activer / Désactiver le fond foncé">
+                        class="p-2.5 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition active:scale-90"
+                        title="Changer le thème">
                         <i data-lucide="sun" id="themeIconSun" class="w-4 h-4 text-amber-500 hidden"></i>
                         <i data-lucide="moon" id="themeIconMoon" class="w-4 h-4 text-indigo-400"></i>
                     </button>
                 </div>
 
-                <nav class="space-y-1.5">
+                <nav class="space-y-2">
                     <button onclick="showTab('files')" id="navFiles"
-                        class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 transition">
+                        class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-md shadow-blue-500/20 transition">
                         <i data-lucide="folder" class="w-4 h-4"></i> Mes Fichiers
                     </button>
                     <button onclick="showTab('admin')" id="navAdmin"
-                        class="hidden w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-100/70 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white transition">
-                        <i data-lucide="shield" class="w-4 h-4"></i> Administration
+                        class="hidden w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition">
+                        <i data-lucide="shield" class="w-4 h-4 text-indigo-500"></i> Administration
                     </button>
                 </nav>
             </div>
@@ -141,30 +139,32 @@
             <!-- QUOTA DISQUE EN DÉGRADÉ & PROFIL -->
             <div class="space-y-4">
                 <div
-                    class="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800">
-                    <div class="flex justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-2">
+                    class="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
+                    <div class="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
                         <span>Stockage utilisé</span>
-                        <span id="quotaText" class="font-mono">0 / 0 MB</span>
+                        <span id="quotaText" class="font-mono text-blue-600 dark:text-blue-400">0 / 0 MB</span>
                     </div>
-                    <div class="w-full bg-slate-200/80 dark:bg-slate-700 h-2 rounded-full overflow-hidden p-0.5">
+                    <div class="w-full bg-slate-200 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden p-0.5">
                         <div id="quotaBar"
                             class="gradient-progress h-full rounded-full w-0 transition-all duration-500"></div>
                     </div>
                 </div>
 
-                <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800">
                     <div class="flex items-center gap-3 truncate">
                         <div
-                            class="w-8 h-8 rounded-full bg-gradient-to-tr from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center font-bold text-xs text-slate-700 dark:text-slate-200 uppercase">
+                            class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-sm shadow-md">
                             <span id="avatarChar">U</span>
                         </div>
                         <div class="truncate">
                             <p id="profName" class="text-xs font-bold text-slate-900 dark:text-white truncate">User</p>
-                            <p id="profRole" class="text-[10px] text-blue-500 font-semibold uppercase tracking-wider">
+                            <p id="profRole"
+                                class="text-[10px] text-blue-600 dark:text-blue-400 font-extrabold uppercase tracking-wider">
                                 ROLE</p>
                         </div>
                     </div>
-                    <button onclick="logout()" class="p-2 text-slate-400 hover:text-red-500 transition active:scale-95"
+                    <button onclick="logout()"
+                        class="p-2 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/50 transition active:scale-95"
                         title="Déconnexion">
                         <i data-lucide="log-out" class="w-4 h-4"></i>
                     </button>
@@ -173,7 +173,7 @@
         </aside>
 
         <!-- CONTENU PRINCIPAL -->
-        <main class="flex-1 bg-slate-50/50 dark:bg-slate-950 p-8 overflow-y-auto">
+        <main class="flex-1 bg-slate-100/60 dark:bg-slate-950 p-8 overflow-y-auto">
 
             <!-- TAB FICHIERS -->
             <section id="tabFilesSection">
@@ -181,45 +181,49 @@
                 <!-- HEADER & RECHERCHE -->
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                     <div>
-                        <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Explorateur</h2>
-                        <div id="breadcrumb" class="text-xs text-slate-400 mt-1 font-medium flex items-center gap-1.5">/
-                        </div>
+                        <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Explorateur
+                        </h2>
+                        <div id="breadcrumb"
+                            class="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
+                            /</div>
                     </div>
                     <div class="relative">
-                        <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-2.5 text-slate-400"></i>
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3 text-slate-400"></i>
                         <input type="text" id="searchInput" onkeyup="filterFiles()"
                             placeholder="Rechercher un fichier..."
-                            class="pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/30 w-64 shadow-sm transition">
+                            class="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-white outline-none focus:border-blue-500 w-64 shadow-sm transition">
                     </div>
                 </div>
 
-                <!-- PETITS BADGES DE STATISTIQUE RAPIDE (Aportent de la vie) -->
-                <div class="grid grid-cols-3 gap-4 mb-6">
+                <!-- BADGES STATISTIQUES VIBRANTS -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                     <div
-                        class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm flex items-center gap-3.5 hover-lift">
-                        <div class="p-3 bg-blue-50 dark:bg-blue-500/10 text-blue-500 rounded-xl"><i data-lucide="file"
-                                class="w-5 h-5"></i></div>
+                        class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4 hover-lift">
+                        <div class="p-3 bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl"><i
+                                data-lucide="file" class="w-6 h-6"></i></div>
                         <div>
-                            <p class="text-[11px] text-slate-400 font-semibold uppercase">Total Fichiers</p>
-                            <p id="statCount" class="text-lg font-bold text-slate-800 dark:text-white">0</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Total Fichiers</p>
+                            <p id="statCount" class="text-xl font-extrabold text-slate-900 dark:text-white">0</p>
                         </div>
                     </div>
                     <div
-                        class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm flex items-center gap-3.5 hover-lift">
-                        <div class="p-3 bg-purple-50 dark:bg-purple-500/10 text-purple-500 rounded-xl"><i
-                                data-lucide="folder" class="w-5 h-5"></i></div>
+                        class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4 hover-lift">
+                        <div
+                            class="p-3 bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 rounded-xl">
+                            <i data-lucide="folder" class="w-6 h-6"></i></div>
                         <div>
-                            <p class="text-[11px] text-slate-400 font-semibold uppercase">Dossiers</p>
-                            <p id="statFolders" class="text-lg font-bold text-slate-800 dark:text-white">0</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Dossiers</p>
+                            <p id="statFolders" class="text-xl font-extrabold text-slate-900 dark:text-white">0</p>
                         </div>
                     </div>
                     <div
-                        class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm flex items-center gap-3.5 hover-lift">
-                        <div class="p-3 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 rounded-xl"><i
-                                data-lucide="hard-drive" class="w-5 h-5"></i></div>
+                        class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4 hover-lift">
+                        <div
+                            class="p-3 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                            <i data-lucide="hard-drive" class="w-6 h-6"></i></div>
                         <div>
-                            <p class="text-[11px] text-slate-400 font-semibold uppercase">Taille Totale</p>
-                            <p id="statSize" class="text-lg font-bold text-slate-800 dark:text-white">0 MB</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Taille Totale</p>
+                            <p id="statSize" class="text-xl font-extrabold text-slate-900 dark:text-white">0 MB</p>
                         </div>
                     </div>
                 </div>
@@ -228,14 +232,15 @@
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
                     <div class="flex items-center gap-2">
                         <input type="text" id="folderInput" placeholder="Nom du dossier..."
-                            class="px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/20 w-44">
+                            class="px-4 py-2.5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-white outline-none focus:border-blue-500 w-48 shadow-sm">
                         <button onclick="createFolder()"
-                            class="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-semibold transition active:scale-95">Créer
-                            dossier</button>
+                            class="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-xl text-xs font-bold transition active:scale-95 shadow-sm">
+                            + Créer dossier
+                        </button>
                     </div>
 
                     <label
-                        class="cursor-pointer px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-semibold rounded-xl transition shadow-md shadow-blue-500/20 flex items-center gap-2 active:scale-95">
+                        class="cursor-pointer px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-extrabold rounded-xl transition shadow-md shadow-blue-500/30 flex items-center gap-2 active:scale-95">
                         <i data-lucide="upload-cloud" class="w-4 h-4"></i> Téléverser des fichiers
                         <input type="file" id="fileInput" multiple class="hidden" onchange="uploadFiles(this.files)">
                     </label>
@@ -244,70 +249,73 @@
                 <!-- ZONE DRAG & DROP -->
                 <div id="dropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
                     ondrop="handleDrop(event)"
-                    class="border-2 border-dashed border-slate-300 dark:border-slate-800 bg-white/40 dark:bg-slate-900/20 rounded-2xl p-6 text-center cursor-pointer mb-6 transition hover:border-blue-400">
-                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Glissez-déposez vos documents
+                    class="border-2 border-dashed border-blue-400/60 dark:border-blue-500/40 bg-blue-50/50 dark:bg-blue-950/20 rounded-2xl p-6 text-center cursor-pointer mb-6 transition hover:border-blue-500 hover:bg-blue-50">
+                    <p class="text-xs font-bold text-blue-700 dark:text-blue-300">Glissez-déposez vos documents
                         directement ici</p>
                 </div>
 
-                <!-- LISTE DE FICHIERS AVEC PILS DE COULEURS -->
+                <!-- LISTE DE FICHIERS AVEC HIGH-CONTRAST & COULEURS -->
                 <div
-                    class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                    class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
                     <table class="w-full text-left border-collapse">
                         <thead
-                            class="bg-slate-50/80 dark:bg-slate-950/60 border-b border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
+                            class="bg-slate-100 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300 uppercase tracking-wider font-extrabold">
                             <tr>
                                 <th class="p-4">Nom</th>
                                 <th class="p-4">Taille</th>
                                 <th class="p-4 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="fileList" class="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs"></tbody>
+                        <tbody id="fileList"
+                            class="divide-y divide-slate-200 dark:divide-slate-800 text-xs font-medium"></tbody>
                     </table>
                 </div>
             </section>
 
             <!-- TAB ADMIN -->
             <section id="tabAdminSection" class="hidden space-y-6">
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Administration</h2>
+                <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Administration</h2>
 
                 <div
-                    class="bg-white dark:bg-slate-900 p-6 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm space-y-4">
-                    <h3 class="font-bold text-xs text-slate-500 uppercase tracking-wider">🔒 Sécurité du Compte</h3>
+                    class="bg-white dark:bg-slate-900 p-6 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm space-y-4">
+                    <h3 class="font-extrabold text-xs text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">🔒
+                        Sécurité du Compte</h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <input type="password" id="oldPass" placeholder="Ancien mot de passe"
-                            class="px-4 py-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-xs">
+                            class="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white">
                         <input type="password" id="newPass" placeholder="Nouveau mot de passe"
-                            class="px-4 py-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-xs">
+                            class="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white">
                         <button onclick="changePassword()"
-                            class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 rounded-xl text-xs font-semibold transition active:scale-95">Mettre
+                            class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 rounded-xl text-xs font-bold transition active:scale-95 shadow-md">Mettre
                             à jour</button>
                     </div>
                 </div>
 
                 <div
-                    class="bg-white dark:bg-slate-900 p-6 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm space-y-4">
-                    <h3 class="font-bold text-xs text-slate-500 uppercase tracking-wider">Paramètres système</h3>
+                    class="bg-white dark:bg-slate-900 p-6 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm space-y-4">
+                    <h3 class="font-extrabold text-xs text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">⚙️
+                        Paramètres système</h3>
                     <div class="flex items-center gap-6">
                         <label
-                            class="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300 font-medium cursor-pointer">
+                            class="flex items-center gap-3 text-xs text-slate-900 dark:text-slate-100 font-bold cursor-pointer">
                             <input type="checkbox" id="setPublic" onchange="updateSettings()"
-                                class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"> Inscriptions
+                                class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"> Inscriptions
                             ouvertes
                         </label>
                         <label
-                            class="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300 font-medium cursor-pointer">
+                            class="flex items-center gap-3 text-xs text-slate-900 dark:text-slate-100 font-bold cursor-pointer">
                             <input type="checkbox" id="setApproval" onchange="updateSettings()"
-                                class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"> Approbation manuelle
-                            des comptes
+                                class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"> Approbation
+                            manuelle des comptes
                         </label>
                     </div>
                 </div>
 
                 <div
-                    class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                    class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
                     <table class="w-full text-left border-collapse">
                         <thead
-                            class="bg-slate-50/80 dark:bg-slate-950/60 border-b border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
+                            class="bg-slate-100 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300 uppercase tracking-wider font-extrabold">
                             <tr>
                                 <th class="p-4">Utilisateur</th>
                                 <th class="p-4">Rôle</th>
@@ -316,7 +324,8 @@
                                 <th class="p-4 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="userList" class="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs"></tbody>
+                        <tbody id="userList"
+                            class="divide-y divide-slate-200 dark:divide-slate-800 text-xs font-semibold"></tbody>
                     </table>
                 </div>
             </section>
@@ -325,15 +334,16 @@
 
     <!-- MODAL DE PREVIEW -->
     <div id="previewModal"
-        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 backdrop-blur-md p-4">
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-4">
         <div
-            class="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
-            <div class="flex items-center justify-between p-4 px-6 border-b border-slate-100 dark:border-slate-800">
-                <h3 id="modalTitle" class="text-sm font-bold text-slate-800 dark:text-white truncate pr-4">Visualisation
-                </h3>
+            class="relative bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-3xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+            <div
+                class="flex items-center justify-between p-4 px-6 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+                <h3 id="modalTitle" class="text-sm font-extrabold text-slate-900 dark:text-white truncate pr-4">
+                    Visualisation</h3>
                 <button onclick="closePreview()"
-                    class="p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition"><i
-                        data-lucide="x" class="w-4 h-4"></i></button>
+                    class="p-1.5 text-slate-500 hover:text-slate-900 dark:hover:text-white rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition"><i
+                        data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <div id="modalContent" class="flex-1 p-6 overflow-auto flex items-center justify-center min-h-[300px]">
             </div>
@@ -435,31 +445,35 @@
 
             // Fil d'Ariane
             const parts = path.split('/').filter(Boolean);
-            let breadcrumbHTML = `<span class="cursor-pointer text-slate-800 dark:text-slate-200 font-bold hover:text-blue-500 transition" onclick="loadFiles('')">Racine</span>`;
+            let breadcrumbHTML = `<span class="cursor-pointer text-blue-600 dark:text-blue-400 font-extrabold hover:underline" onclick="loadFiles('')">Racine</span>`;
             let accum = '';
             parts.forEach((p) => {
                 accum += (accum ? '/' : '') + p;
                 const target = accum;
-                breadcrumbHTML += ` <span class="text-slate-300">/</span> <span class="cursor-pointer text-slate-800 dark:text-slate-200 font-bold hover:text-blue-500 transition" onclick="loadFiles('${target}')">${p}</span>`;
+                breadcrumbHTML += ` <span class="text-slate-400">/</span> <span class="cursor-pointer text-slate-900 dark:text-white font-extrabold hover:text-blue-600 transition" onclick="loadFiles('${target}')">${p}</span>`;
             });
             document.getElementById('breadcrumb').innerHTML = breadcrumbHTML;
 
             renderFileList(allItems, data.parentPath);
         }
 
-        // Icônes colorées selon le type de fichier
+        // Badges d'icônes vivement colorés selon le type de fichier
         function getFileBadge(name, isDirectory) {
-            if (isDirectory) return `<span class="p-2 rounded-xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 inline-block"><i data-lucide="folder" class="w-4 h-4"></i></span>`;
+            if (isDirectory)
+                return `<span class="p-2 rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 inline-block"><i data-lucide="folder" class="w-4 h-4"></i></span>`;
+
             const ext = name.split('.').pop().toLowerCase();
 
-            if (['jpg', 'png', 'gif', 'svg', 'webp'].includes(ext))
-                return `<span class="p-2 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 inline-block"><i data-lucide="image" class="w-4 h-4"></i></span>`;
+            if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext))
+                return `<span class="p-2 rounded-xl bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 inline-block"><i data-lucide="image" class="w-4 h-4"></i></span>`;
             if (['pdf'].includes(ext))
-                return `<span class="p-2 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 inline-block"><i data-lucide="file-text" class="w-4 h-4"></i></span>`;
+                return `<span class="p-2 rounded-xl bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 inline-block"><i data-lucide="file-text" class="w-4 h-4"></i></span>`;
             if (['js', 'html', 'css', 'json', 'py'].includes(ext))
-                return `<span class="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 inline-block"><i data-lucide="code" class="w-4 h-4"></i></span>`;
+                return `<span class="p-2 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 inline-block"><i data-lucide="code" class="w-4 h-4"></i></span>`;
+            if (['mp3', 'wav', 'mp4', 'mkv', 'mov'].includes(ext))
+                return `<span class="p-2 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 inline-block"><i data-lucide="video" class="w-4 h-4"></i></span>`;
 
-            return `<span class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 inline-block"><i data-lucide="file" class="w-4 h-4"></i></span>`;
+            return `<span class="p-2 rounded-xl bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 inline-block"><i data-lucide="file" class="w-4 h-4"></i></span>`;
         }
 
         function renderFileList(items, parentPath) {
@@ -468,15 +482,15 @@
 
             if (parentPath !== null && parentPath !== undefined) {
                 tbody.innerHTML += `
-        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition cursor-pointer" onclick="loadFiles('${parentPath}')">
-          <td colspan="3" class="p-3.5 text-slate-500 font-medium flex items-center gap-2">
-            <span class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800"><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i></span> Dossier parent
+        <tr class="hover:bg-blue-50/50 dark:hover:bg-slate-800/60 transition cursor-pointer" onclick="loadFiles('${parentPath}')">
+          <td colspan="3" class="p-3.5 text-blue-600 dark:text-blue-400 font-bold flex items-center gap-2">
+            <span class="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/40"><i data-lucide="arrow-left" class="w-4 h-4"></i></span> Dossier parent
           </td>
         </tr>`;
             }
 
             if (items.length === 0) {
-                tbody.innerHTML += `<tr><td colspan="3" class="p-8 text-center text-slate-400 text-xs font-medium">Aucun fichier dans ce dossier.</td></tr>`;
+                tbody.innerHTML += `<tr><td colspan="3" class="p-8 text-center text-slate-500 dark:text-slate-400 text-xs font-bold">Aucun fichier dans ce dossier.</td></tr>`;
                 lucide.createIcons();
                 return;
             }
@@ -486,21 +500,21 @@
                 const sizeText = item.isDirectory ? '-' : (item.size > 1024 * 1024 ? (item.size / (1024 * 1024)).toFixed(1) + ' MB' : (item.size / 1024).toFixed(1) + ' KB');
 
                 tbody.innerHTML += `
-        <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
-          <td class="p-3.5 font-medium text-slate-800 dark:text-slate-200">
+        <tr class="hover:bg-slate-100/70 dark:hover:bg-slate-800/50 transition">
+          <td class="p-3.5 font-bold text-slate-900 dark:text-white">
             <div class="flex items-center gap-3">
               ${getFileBadge(item.name, item.isDirectory)}
-              <span class="${item.isDirectory ? 'cursor-pointer font-semibold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition' : ''}" 
+              <span class="${item.isDirectory ? 'cursor-pointer font-extrabold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition' : ''}" 
                     ${item.isDirectory ? `onclick="loadFiles('${full}')"` : ''}>
                     ${item.name}
               </span>
             </div>
           </td>
-          <td class="p-3.5 text-slate-400 font-mono text-[11px]">${sizeText}</td>
-          <td class="p-3.5 text-right space-x-1">
-            ${!item.isDirectory ? `<button onclick="previewFile('${full}', '${item.name}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl text-[11px] font-medium transition active:scale-95">Aperçu</button>` : ''}
-            ${!item.isDirectory ? `<button onclick="downloadFile('${full}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl text-[11px] font-medium transition active:scale-95">Télécharger</button>` : ''}
-            <button onclick="deleteItem('${full}')" class="px-2.5 py-1.5 bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400 hover:bg-red-100 rounded-xl text-[11px] font-medium transition active:scale-95">Supprimer</button>
+          <td class="p-3.5 text-slate-600 dark:text-slate-400 font-mono text-xs font-bold">${sizeText}</td>
+          <td class="p-3.5 text-right space-x-1.5">
+            ${!item.isDirectory ? `<button onclick="previewFile('${full}', '${item.name}')" class="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/30 rounded-xl text-xs font-bold transition active:scale-95">Aperçu</button>` : ''}
+            ${!item.isDirectory ? `<button onclick="downloadFile('${full}')" class="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/20 dark:text-emerald-300 dark:hover:bg-emerald-500/30 rounded-xl text-xs font-bold transition active:scale-95">Télécharger</button>` : ''}
+            <button onclick="deleteItem('${full}')" class="px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/30 rounded-xl text-xs font-bold transition active:scale-95">Supprimer</button>
           </td>
         </tr>`;
             });
@@ -565,7 +579,7 @@
             const modal = document.getElementById('previewModal');
             const modalContent = document.getElementById('modalContent');
             document.getElementById('modalTitle').innerText = fileName;
-            modalContent.innerHTML = `<p class="text-xs text-slate-400">Chargement...</p>`;
+            modalContent.innerHTML = `<p class="text-xs font-bold text-slate-500">Chargement...</p>`;
             modal.classList.remove('hidden');
 
             const fileUrl = `/api/files/download?filePath=${encodeURIComponent(filePath)}&preview=true&token=${localStorage.getItem('token')}`;
@@ -580,9 +594,9 @@
             } else if (['txt', 'js', 'json', 'html', 'css', 'py'].includes(ext)) {
                 const res = await fetch(fileUrl);
                 const text = await res.text();
-                modalContent.innerHTML = `<pre class="w-full p-4 bg-slate-50 dark:bg-slate-950 text-xs font-mono rounded-2xl overflow-x-auto border border-slate-200 dark:border-slate-800 max-h-[65vh]">${text.replace(/</g, "&lt;")}</pre>`;
+                modalContent.innerHTML = `<pre class="w-full p-4 bg-slate-900 text-slate-100 text-xs font-mono rounded-2xl overflow-x-auto border border-slate-800 max-h-[65vh]">${text.replace(/</g, "&lt;")}</pre>`;
             } else {
-                modalContent.innerHTML = `<div class="text-center space-y-3"><p class="text-xs text-slate-400">Aperçu direct non disponible pour ce type de fichier.</p><button onclick="downloadFile('${filePath}')" class="px-4 py-2 bg-blue-600 text-white text-xs rounded-xl font-semibold shadow-md shadow-blue-500/20">Télécharger le fichier</button></div>`;
+                modalContent.innerHTML = `<div class="text-center space-y-3"><p class="text-xs text-slate-500 font-bold">Aperçu direct non disponible pour ce type de fichier.</p><button onclick="downloadFile('${filePath}')" class="px-4 py-2 bg-blue-600 text-white text-xs rounded-xl font-bold shadow-md shadow-blue-500/20">Télécharger le fichier</button></div>`;
             }
         }
 
@@ -615,15 +629,15 @@
                     const isLoggedUser = user.username && user.username.toLowerCase() === u.username.toLowerCase();
 
                     tbody.innerHTML += `
-          <tr class="p-3.5 border-b border-slate-100 dark:border-slate-800">
-            <td class="p-3.5 font-bold text-slate-800 dark:text-slate-200">${u.username}</td>
-            <td class="p-3.5"><span class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">${u.role}</span></td>
-            <td class="p-3.5"><span class="px-2.5 py-1 text-[10px] font-bold rounded-lg ${isApproved ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400'}">${u.status}</span></td>
-            <td class="p-3.5 text-xs font-mono text-slate-400">${(u.usedBytes / (1024 * 1024)).toFixed(1)} / ${u.quotaMB} MB</td>
-            <td class="p-3.5 text-right space-x-1">
-              ${(!isApproved) ? `<button onclick="updateUserStatus('${u.id}', 'APPROVED')" class="px-2.5 py-1 bg-emerald-600 text-white text-[10px] font-semibold rounded-lg">Approuver</button>` : ''}
-              ${(isApproved && !isLoggedUser) ? `<button onclick="updateUserStatus('${u.id}', 'DISABLED')" class="px-2.5 py-1 bg-amber-600 text-white text-[10px] font-semibold rounded-lg">Désactiver</button>` : ''}
-              ${!isLoggedUser ? `<button onclick="deleteUser('${u.id}', '${u.username}')" class="px-2.5 py-1 bg-red-600 text-white text-[10px] font-semibold rounded-lg">Supprimer</button>` : ''}
+          <tr class="p-3.5 border-b border-slate-200 dark:border-slate-800">
+            <td class="p-3.5 font-bold text-slate-900 dark:text-white">${u.username}</td>
+            <td class="p-3.5"><span class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-300">${u.role}</span></td>
+            <td class="p-3.5"><span class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg ${isApproved ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300'}">${u.status}</span></td>
+            <td class="p-3.5 text-xs font-mono font-bold text-slate-600 dark:text-slate-400">${(u.usedBytes / (1024 * 1024)).toFixed(1)} / ${u.quotaMB} MB</td>
+            <td class="p-3.5 text-right space-x-1.5">
+              ${(!isApproved) ? `<button onclick="updateUserStatus('${u.id}', 'APPROVED')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg shadow-sm">Approuver</button>` : ''}
+              ${(isApproved && !isLoggedUser) ? `<button onclick="updateUserStatus('${u.id}', 'DISABLED')" class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold rounded-lg shadow-sm">Désactiver</button>` : ''}
+              ${!isLoggedUser ? `<button onclick="deleteUser('${u.id}', '${u.username}')" class="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold rounded-lg shadow-sm">Supprimer</button>` : ''}
             </td>
           </tr>`;
                 });
