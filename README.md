@@ -60,7 +60,6 @@ npm install
 ### 4. Structure des dossiers
 ```text
 cloudspace-pro/
-├── uploads/                # Stockage physique des fichiers téléversés
 ├── data/                   # Stockage des données BDD
 │   └── users.json          # Base de données locale (Fichier JSON)
 ├── public/
