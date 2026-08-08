@@ -62,13 +62,10 @@ npm install
 cloudspace-pro/
 ├── public/
 │   └── index.html       # Interface principale (Frontend)
-├── src/
-│   ├── config/
-│   ├── middleware/      # Authentification JWT, vérification des rôles
-│   ├── routes/          # Routes API (auth, files, admin, user)
-│   ├── utils/          
+├── src/│        
 │   └── server.js        # Point d'entrée de l'application Express
 ├── uploads/             # Dossier de stockage des fichiers utilisateur
+├── data/                # Dossier de stockage des données BDD
 ├── .env                 # Variables d'environnement
 ├── package.json
 └── README.md
