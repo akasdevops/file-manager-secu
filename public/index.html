@@ -685,27 +685,28 @@
             document.getElementById('statSize').innerText = `${sizeMB} MB`;
         }
 
-        // Filtre récursif dans l'arborescence actuellement chargée
-        function filterFiles() {
-            const q = document.getElementById('searchInput').value.toLowerCase();
+        // Recherche récursive dans toute l'arborescence (côté serveur)
+        async function filterFiles() {
+            const q = document.getElementById('searchInput').value.toLowerCase().trim();
             if (!q) {
-                renderFileList(allItems);
+                loadFiles(currentPath);
                 return;
             }
-            
-            const filtered = [];
-            function searchTree(itemList) {
-                itemList.forEach(item => {
-                    if (item.name.toLowerCase().includes(q)) {
-                        filtered.push(item);
-                    }
-                    if (item.children) {
-                        searchTree(item.children);
-                    }
-                });
-            }
-            searchTree(allItems);
-            renderFileList(filtered);
+            const res = await fetch(`/api/files/search?q=${encodeURIComponent(q)}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            const data = await res.json();
+            // On affiche le chemin complet pour savoir où se trouve chaque résultat
+            allItems = (data.items || []).map(item => ({
+                name: item.path,
+                size: item.size,
+                isDirectory: item.isDirectory,
+                path: item.path,
+                level: 0,
+                isExpanded: false,
+                children: null
+            }));
+            renderFileList(allItems);
         }
 
         // Téléversement

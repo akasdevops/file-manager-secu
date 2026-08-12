@@ -86,7 +86,46 @@ router.get('/browse', auth, (req, res) => {
     });
 });
 
-// 2. Téléverser
+// 2. Recherche récursive dans toute l'arborescence
+router.get('/search', auth, (req, res) => {
+    const q = (req.query.q || '').trim().toLowerCase();
+    if (!q) return res.json({ items: [] });
+
+    const results = [];
+    const MAX_RESULTS = 200;
+
+    function walk(dir, rel) {
+        if (results.length >= MAX_RESULTS) return;
+        let entries;
+        try {
+            entries = fs.readdirSync(dir, { withFileTypes: true });
+        } catch (err) {
+            return;
+        }
+        for (const entry of entries) {
+            if (results.length >= MAX_RESULTS) break;
+            if (SENSITIVE_FILES.includes(entry.name.toLowerCase())) continue;
+
+            if (entry.name.toLowerCase().includes(q)) {
+                const itemPath = rel ? `${rel}/${entry.name}` : entry.name;
+                let size = 0;
+                if (!entry.isDirectory()) {
+                    try { size = fs.statSync(path.join(dir, entry.name)).size; } catch (err) { }
+                }
+                results.push({ name: entry.name, size, isDirectory: entry.isDirectory(), path: itemPath });
+            }
+
+            if (entry.isDirectory()) {
+                walk(path.join(dir, entry.name), rel ? `${rel}/${entry.name}` : entry.name);
+            }
+        }
+    }
+
+    walk(UPLOADS_ROOT, '');
+    res.json({ items: results });
+});
+
+// 3. Téléverser
 router.post('/upload', auth, upload.array('files'), (req, res) => {
     res.json({ message: 'Fichiers envoyés sur le NAS !' });
 });
