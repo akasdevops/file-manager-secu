@@ -12,10 +12,19 @@ const UPLOADS_ROOT = path.join(__dirname, '../../uploads');
 function getFolderSize(dir) {
     if (!fs.existsSync(dir)) return 0;
     let total = 0;
-    for (const file of fs.readdirSync(dir)) {
-        const fullPath = path.join(dir, file);
-        const stat = fs.statSync(fullPath);
-        total += stat.isDirectory() ? getFolderSize(fullPath) : stat.size;
+    try {
+        const files = fs.readdirSync(dir);
+        for (const file of files) {
+            const fullPath = path.join(dir, file);
+            try {
+                const stat = fs.statSync(fullPath);
+                total += stat.isDirectory() ? getFolderSize(fullPath) : stat.size;
+            } catch (err) {
+                // Ignore files or directories that cannot be accessed/read
+            }
+        }
+    } catch (err) {
+        // Ignore folder read errors (e.g. EACCES)
     }
     return total;
 }
@@ -32,13 +41,23 @@ router.get('/browse', auth, (req, res) => {
     // 🛡️ Liste des fichiers système/sensibles à masquer absolument
     const HIDDEN_FILES = ['users.json', '.DS_Store', 'thumbs.db'];
 
-    const items = fs.readdirSync(targetDir)
-        // 🛡️ Filtre : On retire users.json de la liste
-        .filter(name => !HIDDEN_FILES.includes(name.toLowerCase()))
-        .map(name => {
-            const stat = fs.statSync(path.join(targetDir, name));
-            return { name, size: stat.size, isDirectory: stat.isDirectory() };
-        });
+    let items = [];
+    try {
+        items = fs.readdirSync(targetDir)
+            // 🛡️ Filtre : On retire users.json de la liste
+            .filter(name => !HIDDEN_FILES.includes(name.toLowerCase()))
+            .map(name => {
+                try {
+                    const stat = fs.statSync(path.join(targetDir, name));
+                    return { name, size: stat.size, isDirectory: stat.isDirectory() };
+                } catch (err) {
+                    return null; // Skip file if we can't read it
+                }
+            })
+            .filter(item => item !== null);
+    } catch (err) {
+        return res.status(403).json({ error: 'Accès au dossier refusé.' });
+    }
 
     const db = readData();
     const userData = db.users.find(u => u.id === req.user.id);
@@ -65,8 +84,12 @@ router.post('/folder', auth, (req, res) => {
         return res.status(400).json({ error: 'Chemin interdit.' });
     }
 
-    fs.mkdirSync(target, { recursive: true });
-    res.json({ message: 'Dossier créé.' });
+    try {
+        fs.mkdirSync(target, { recursive: true });
+        res.json({ message: 'Dossier créé.' });
+    } catch (err) {
+        res.status(500).json({ error: 'Impossible de créer le dossier (erreur de permission).' });
+    }
 });
 
 // 4. Télécharger / Aperçu
@@ -95,7 +118,12 @@ router.delete('/', auth, (req, res) => {
     const fullPath = path.join(UPLOADS_ROOT, itemPath);
 
     if (fullPath.startsWith(UPLOADS_ROOT) && fs.existsSync(fullPath)) {
-        fs.rmSync(fullPath, { recursive: true, force: true });
+        try {
+            fs.rmSync(fullPath, { recursive: true, force: true });
+            return res.json({ message: 'Élément supprimé.' });
+        } catch (err) {
+            return res.status(500).json({ error: 'Impossible de supprimer l\'élément (erreur de permission).' });
+        }
     }
     res.json({ message: 'Élément supprimé.' });
 });
