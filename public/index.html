@@ -495,7 +495,15 @@
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             });
             const data = await res.json();
-            allItems = data.items || [];
+            allItems = (data.items || []).map(item => ({
+                name: item.name,
+                size: item.size,
+                isDirectory: item.isDirectory,
+                path: path ? `${path}/${item.name}` : item.name,
+                level: 0,
+                isExpanded: false,
+                children: null
+            }));
 
             const usedMB = (data.usedBytes / (1024 * 1024)).toFixed(1);
             const quotaMB = (data.quotaBytes / (1024 * 1024)).toFixed(0);
@@ -527,7 +535,79 @@
             document.getElementById('breadcrumb').innerHTML = breadcrumbHTML;
             lucide.createIcons();
 
-            renderFileList(allItems, data.parentPath);
+            renderFileList(allItems);
+        }
+
+        // Helper pour retrouver un item par son chemin
+        function findItemByPath(items, targetPath) {
+            for (const item of items) {
+                if (item.path === targetPath) return item;
+                if (item.isDirectory && item.children) {
+                    const found = findItemByPath(item.children, targetPath);
+                    if (found) return found;
+                }
+            }
+            return null;
+        }
+
+        // Déplier / Replier un dossier
+        async function toggleFolder(itemPath) {
+            const item = findItemByPath(allItems, itemPath);
+            if (!item || !item.isDirectory) return;
+
+            if (item.isExpanded) {
+                item.isExpanded = false;
+                renderFileList(allItems);
+            } else {
+                item.isExpanded = true;
+                if (item.children === null) {
+                    try {
+                        const res = await fetch(`/api/files/browse?path=${encodeURIComponent(item.path)}`, {
+                            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                        });
+                        const data = await res.json();
+                        item.children = (data.items || []).map(child => ({
+                            name: child.name,
+                            size: child.size,
+                            isDirectory: child.isDirectory,
+                            path: `${item.path}/${child.name}`,
+                            level: item.level + 1,
+                            isExpanded: false,
+                            children: null
+                        }));
+                    } catch (err) {
+                        item.children = [];
+                    }
+                }
+                renderFileList(allItems);
+            }
+        }
+
+        // Clic sur une ligne (sélectionne le dossier / ouvre le fichier)
+        function handleRowClick(itemPath, isDirectory) {
+            currentPath = itemPath;
+            const parts = itemPath.split('/').filter(Boolean);
+            
+            // Fil d'Ariane
+            let breadcrumbHTML = `<span class="flex items-center gap-1.5 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold transition duration-200" onclick="loadFiles('')"><i data-lucide="home" class="w-4 h-4"></i> Racine</span>`;
+            let accum = '';
+            parts.forEach((p, idx) => {
+                accum += (accum ? '/' : '') + p;
+                const target = accum;
+                const isLast = idx === parts.length - 1;
+                breadcrumbHTML += ` <span class="text-slate-300 dark:text-slate-700 font-normal">/</span> `;
+                if (isLast) {
+                    breadcrumbHTML += `<span class="text-slate-900 dark:text-white font-extrabold">${p}</span>`;
+                } else {
+                    breadcrumbHTML += `<span class="cursor-pointer text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold transition duration-200" onclick="loadFiles('${target}')">${p}</span>`;
+                }
+            });
+            document.getElementById('breadcrumb').innerHTML = breadcrumbHTML;
+            lucide.createIcons();
+
+            if (isDirectory) {
+                toggleFolder(itemPath);
+            }
         }
 
         // Badges d'icônes vivement colorés selon le type de fichier
@@ -549,57 +629,90 @@
             return `<span class="p-2 rounded-xl bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 inline-block"><i data-lucide="file" class="w-4 h-4"></i></span>`;
         }
 
-        function renderFileList(items, parentPath) {
+        // Rendu de la liste
+        function renderFileList(items) {
             const tbody = document.getElementById('fileList');
             tbody.innerHTML = '';
 
-            if (parentPath !== null && parentPath !== undefined) {
-                tbody.innerHTML += `
-        <tr class="hover:bg-blue-50/50 dark:hover:bg-slate-800/60 transition cursor-pointer" onclick="loadFiles('${parentPath}')">
-          <td colspan="3" class="p-3.5 text-blue-600 dark:text-blue-400 font-bold flex items-center gap-2">
-            <span class="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/40"><i data-lucide="arrow-left" class="w-4 h-4"></i></span> Dossier parent
-          </td>
-        </tr>`;
-            }
+            const rowsHtml = [];
+            
+            function buildRows(itemList) {
+                itemList.forEach(item => {
+                    const sizeText = item.isDirectory ? '-' : (item.size > 1024 * 1024 ? (item.size / (1024 * 1024)).toFixed(1) + ' MB' : (item.size / 1024).toFixed(1) + ' KB');
+                    
+                    let toggleIcon = '';
+                    if (item.isDirectory) {
+                        const iconName = item.isExpanded ? 'chevron-down' : 'chevron-right';
+                        toggleIcon = `<i data-lucide="${iconName}" class="w-4 h-4 text-slate-400 dark:text-slate-500 cursor-pointer hover:text-blue-500 transition" onclick="event.stopPropagation(); toggleFolder('${item.path}')"></i>`;
+                    } else {
+                        toggleIcon = `<span class="w-4 h-4 inline-block"></span>`;
+                    }
 
-            if (items.length === 0) {
-                tbody.innerHTML += `<tr><td colspan="3" class="p-8 text-center text-slate-500 dark:text-slate-400 text-xs font-bold">Aucun fichier dans ce dossier.</td></tr>`;
-                lucide.createIcons();
-                return;
-            }
+                    const isSelected = currentPath === item.path;
+                    const rowClass = isSelected 
+                        ? 'bg-blue-50/50 dark:bg-blue-950/20 border-l-2 border-blue-500' 
+                        : 'hover:bg-slate-100/70 dark:hover:bg-slate-800/50';
 
-            items.forEach(item => {
-                const full = currentPath ? `${currentPath}/${item.name}` : item.name;
-                const sizeText = item.isDirectory ? '-' : (item.size > 1024 * 1024 ? (item.size / (1024 * 1024)).toFixed(1) + ' MB' : (item.size / 1024).toFixed(1) + ' KB');
-
-                tbody.innerHTML += `
-        <tr class="hover:bg-slate-100/70 dark:hover:bg-slate-800/50 transition">
+                    rowsHtml.push(`
+        <tr class="file-row ${rowClass} transition cursor-pointer" onclick="handleRowClick('${item.path}', ${item.isDirectory})">
           <td class="p-3.5 font-bold text-slate-900 dark:text-white">
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3" style="padding-left: ${item.level * 24}px">
+              ${toggleIcon}
               ${getFileBadge(item.name, item.isDirectory)}
-              <span class="${item.isDirectory ? 'cursor-pointer font-extrabold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition' : ''}" 
-                    ${item.isDirectory ? `onclick="loadFiles('${full}')"` : ''}>
+              <span class="${item.isDirectory ? 'font-extrabold' : ''} text-slate-900 dark:text-white">
                     ${item.name}
               </span>
             </div>
           </td>
           <td class="p-3.5 text-slate-600 dark:text-slate-400 font-mono text-xs font-bold">${sizeText}</td>
-          <td class="p-3.5 text-right space-x-1.5">
-            ${!item.isDirectory ? `<button onclick="previewFile('${full}', '${item.name}')" class="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/30 rounded-xl text-xs font-bold transition active:scale-95">Aperçu</button>` : ''}
-            ${!item.isDirectory ? `<button onclick="downloadFile('${full}')" class="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/20 dark:text-emerald-300 dark:hover:bg-emerald-500/30 rounded-xl text-xs font-bold transition active:scale-95">Télécharger</button>` : ''}
-            <button onclick="deleteItem('${full}')" class="px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/30 rounded-xl text-xs font-bold transition active:scale-95">Supprimer</button>
+          <td class="p-3.5 text-right space-x-1.5" onclick="event.stopPropagation()">
+            ${!item.isDirectory ? `<button onclick="previewFile('${item.path}', '${item.name}')" class="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/30 rounded-xl text-xs font-bold transition active:scale-95">Aperçu</button>` : ''}
+            ${!item.isDirectory ? `<button onclick="downloadFile('${item.path}')" class="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/20 dark:text-emerald-300 dark:hover:bg-emerald-500/30 rounded-xl text-xs font-bold transition active:scale-95">Télécharger</button>` : ''}
+            <button onclick="deleteItem('${item.path}')" class="px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/30 rounded-xl text-xs font-bold transition active:scale-95">Supprimer</button>
           </td>
-        </tr>`;
-            });
+        </tr>`);
 
+                    if (item.isDirectory && item.isExpanded && item.children) {
+                        buildRows(item.children);
+                    }
+                });
+            }
+
+            buildRows(items);
+
+            if (rowsHtml.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-slate-500 dark:text-slate-400 text-xs font-bold">Aucun fichier dans ce dossier.</td></tr>`;
+            } else {
+                tbody.innerHTML = rowsHtml.join('');
+            }
+            
             lucide.createIcons();
         }
 
+        // Filtre récursif dans l'arborescence actuellement chargée
         function filterFiles() {
             const q = document.getElementById('searchInput').value.toLowerCase();
-            renderFileList(allItems.filter(i => i.name.toLowerCase().includes(q)), null);
+            if (!q) {
+                renderFileList(allItems);
+                return;
+            }
+            
+            const filtered = [];
+            function searchTree(itemList) {
+                itemList.forEach(item => {
+                    if (item.name.toLowerCase().includes(q)) {
+                        filtered.push(item);
+                    }
+                    if (item.children) {
+                        searchTree(item.children);
+                    }
+                });
+            }
+            searchTree(allItems);
+            renderFileList(filtered);
         }
 
+        // Téléversement
         async function uploadFiles(files) {
             if (!files || files.length === 0) return;
             const fd = new FormData();
@@ -612,7 +725,18 @@
                 body: fd
             });
             if (!res.ok) alert((await res.json()).error);
-            loadFiles(currentPath);
+            
+            // Recharger l'arborescence du dossier actuel
+            if (currentPath === '') {
+                loadFiles('');
+            } else {
+                const item = findItemByPath(allItems, currentPath);
+                if (item) {
+                    item.children = null;
+                    item.isExpanded = false;
+                    await toggleFolder(currentPath);
+                }
+            }
         }
 
         function handleDragOver(e) { e.preventDefault(); }
@@ -622,6 +746,7 @@
             if (e.dataTransfer.files?.length) uploadFiles(e.dataTransfer.files);
         }
 
+        // Créer un dossier
         async function createFolder() {
             const name = document.getElementById('folderInput').value;
             if (!name) return;
@@ -631,13 +756,25 @@
                 body: JSON.stringify({ parentPath: currentPath, folderName: name })
             });
             document.getElementById('folderInput').value = '';
-            loadFiles(currentPath);
+            
+            // Recharger l'arborescence du dossier actuel
+            if (currentPath === '') {
+                loadFiles('');
+            } else {
+                const item = findItemByPath(allItems, currentPath);
+                if (item) {
+                    item.children = null;
+                    item.isExpanded = false;
+                    await toggleFolder(currentPath);
+                }
+            }
         }
 
         function downloadFile(filePath) {
             window.location.href = `/api/files/download?filePath=${encodeURIComponent(filePath)}&token=${localStorage.getItem('token')}`;
         }
 
+        // Supprimer un élément
         async function deleteItem(itemPath) {
             if (!confirm('Supprimer cet élément ?')) return;
             await fetch('/api/files', {
@@ -645,7 +782,22 @@
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ itemPath })
             });
-            loadFiles(currentPath);
+            
+            const parts = itemPath.split('/');
+            parts.pop();
+            const parentPath = parts.join('/');
+            
+            // Recharger le parent
+            if (parentPath === '') {
+                loadFiles('');
+            } else {
+                const item = findItemByPath(allItems, parentPath);
+                if (item) {
+                    item.children = null;
+                    item.isExpanded = false;
+                    await toggleFolder(parentPath);
+                }
+            }
         }
 
         async function previewFile(filePath, fileName) {
