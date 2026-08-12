@@ -585,8 +585,14 @@
 
         // Clic sur une ligne (sélectionne le dossier / ouvre le fichier)
         function handleRowClick(itemPath, isDirectory) {
-            currentPath = itemPath;
-            const parts = itemPath.split('/').filter(Boolean);
+            if (isDirectory) {
+                currentPath = itemPath;
+            } else {
+                const tempParts = itemPath.split('/').filter(Boolean);
+                tempParts.pop(); // Retire le nom du fichier pour garder le dossier parent
+                currentPath = tempParts.join('/');
+            }
+            const parts = currentPath.split('/').filter(Boolean);
             
             // Fil d'Ariane
             let breadcrumbHTML = `<span class="flex items-center gap-1.5 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold transition duration-200" onclick="loadFiles('')"><i data-lucide="home" class="w-4 h-4"></i> Racine</span>`;
@@ -607,6 +613,8 @@
 
             if (isDirectory) {
                 toggleFolder(itemPath);
+            } else {
+                previewFile(itemPath, itemPath.split('/').pop());
             }
         }
 
