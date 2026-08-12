@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcryptjs');
 const auth = require('../middlewares/auth');
 const admin = require('../middlewares/admin');
 const { readData, saveData } = require('../config/database');
@@ -8,6 +9,7 @@ router.use(auth, admin);
 
 const ALLOWED_STATUSES = ['APPROVED', 'PENDING', 'DISABLED'];
 const ALLOWED_SETTINGS = ['allowPublicRegister', 'requireAdminApproval'];
+const ALLOWED_ROLES = ['USER', 'ADMIN'];
 
 // Paramètres
 router.get('/settings', (req, res) => res.json(readData().settings));
@@ -27,6 +29,47 @@ router.post('/settings', (req, res) => {
 router.get('/users', (req, res) => {
     const db = readData();
     res.json(db.users.map(({ password, ...u }) => u));
+});
+
+// Créer un utilisateur (directement approuvé, rôle et quota au choix)
+router.post('/users', async (req, res) => {
+    const { username, password, role, quotaMB } = req.body;
+
+    if (!username || !password) return res.status(400).json({ error: 'Identifiants incomplets.' });
+
+    const cleanUsername = String(username).trim();
+    if (!/^[a-zA-Z0-9_.-]{3,32}$/.test(cleanUsername)) {
+        return res.status(400).json({ error: 'Nom d\'utilisateur invalide (3 à 32 caractères : lettres, chiffres, _ . -).' });
+    }
+    if (typeof password !== 'string' || password.length < 8) {
+        return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 8 caractères.' });
+    }
+
+    const newRole = ALLOWED_ROLES.includes(role) ? role : 'USER';
+    let newQuota = parseInt(quotaMB, 10);
+    if (!Number.isInteger(newQuota) || newQuota <= 0) {
+        newQuota = 500;
+    }
+
+    const db = readData();
+    if (db.users.find(u => u.username.toLowerCase() === cleanUsername.toLowerCase())) {
+        return res.status(400).json({ error: 'Cet utilisateur existe déjà.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = {
+        id: Date.now().toString(),
+        username: cleanUsername,
+        password: hashedPassword,
+        role: newRole,
+        status: 'APPROVED',
+        quotaMB: newQuota
+    };
+
+    db.users.push(newUser);
+    saveData(db);
+
+    res.json({ message: 'Utilisateur créé avec succès.' });
 });
 
 router.put('/users/:id/status', (req, res) => {
