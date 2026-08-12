@@ -1,6 +1,7 @@
 .env
 node_modules/
-package-lock.json
 uploads/
 data/
 data/users.json
+BesoinSpec.md
+Docs.md
