@@ -7,7 +7,27 @@ const upload = require('../utils/storage');
 const { readData } = require('../config/database');
 
 // Dossier Racine = Le point de montage du NAS
-const UPLOADS_ROOT = path.join(__dirname, '../../uploads');
+const UPLOADS_ROOT = path.resolve(__dirname, '../../uploads');
+
+// 🛡️ Fichiers système/sensibles à masquer et bloquer absolument
+const SENSITIVE_FILES = ['users.json', '.env', '.git', '.ds_store', 'thumbs.db', 'node_modules', 'dockerfile', 'docker-compose.yml'];
+
+function isInside(base, target) {
+    const rel = path.relative(base, target);
+    return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
+}
+
+function isSensitive(p) {
+    const parts = p.split(path.sep);
+    return parts.some(part => SENSITIVE_FILES.includes(part.toLowerCase()));
+}
+
+// 🔎 Résout un chemin utilisateur en chemin absolu sûr (dans UPLOADS_ROOT)
+function resolveSafe(userPath) {
+    const clean = (userPath || '').replace(/^[/\\]+/, '').replace(/[/\\]+$/, '');
+    const full = path.resolve(UPLOADS_ROOT, clean);
+    return isInside(UPLOADS_ROOT, full) ? full : null;
+}
 
 function getFolderSize(dir) {
     if (!fs.existsSync(dir)) return 0;
@@ -31,21 +51,17 @@ function getFolderSize(dir) {
 
 // 1. Lister les fichiers
 router.get('/browse', auth, (req, res) => {
-    const relPath = req.query.path || '';
-    // 🎯 On pointe directement sur UPLOADS_ROOT
-    const targetDir = path.join(UPLOADS_ROOT, relPath);
+    const targetDir = resolveSafe(req.query.path || '');
 
-    if (!targetDir.startsWith(UPLOADS_ROOT) || !fs.existsSync(targetDir)) {
+    if (!targetDir || !fs.existsSync(targetDir)) {
         return res.status(400).json({ error: 'Dossier introuvable.' });
     }
-    // 🛡️ Liste des fichiers système/sensibles à masquer absolument
-    const HIDDEN_FILES = ['users.json', '.DS_Store', 'thumbs.db'];
 
     let items = [];
     try {
         items = fs.readdirSync(targetDir)
-            // 🛡️ Filtre : On retire users.json de la liste
-            .filter(name => !HIDDEN_FILES.includes(name.toLowerCase()))
+            // 🛡️ Filtre : on masque les fichiers sensibles
+            .filter(name => !SENSITIVE_FILES.includes(name.toLowerCase()))
             .map(name => {
                 try {
                     const stat = fs.statSync(path.join(targetDir, name));
@@ -64,7 +80,7 @@ router.get('/browse', auth, (req, res) => {
 
     res.json({
         items,
-        parentPath: relPath ? (path.dirname(relPath) === '.' ? '' : path.dirname(relPath)) : null,
+        parentPath: req.query.path ? (path.dirname(req.query.path) === '.' ? '' : path.dirname(req.query.path)) : null,
         usedBytes: getFolderSize(UPLOADS_ROOT),
         quotaBytes: (userData?.quotaMB || 500) * 1024 * 1024
     });
@@ -78,9 +94,18 @@ router.post('/upload', auth, upload.array('files'), (req, res) => {
 // 3. Créer un dossier
 router.post('/folder', auth, (req, res) => {
     const { parentPath, folderName } = req.body;
-    const target = path.join(UPLOADS_ROOT, parentPath || '', folderName);
+    if (!folderName || typeof folderName !== 'string') {
+        return res.status(400).json({ error: 'Nom de dossier invalide.' });
+    }
+    const parentDir = resolveSafe(parentPath);
+    if (!parentDir) {
+        return res.status(400).json({ error: 'Chemin interdit.' });
+    }
 
-    if (!target.startsWith(UPLOADS_ROOT)) {
+    const safeName = folderName.replace(/[/\\\0]/g, '_').replace(/^[.]+$/, '');
+    const target = path.resolve(parentDir, safeName);
+
+    if (!isInside(UPLOADS_ROOT, target)) {
         return res.status(400).json({ error: 'Chemin interdit.' });
     }
 
@@ -92,18 +117,57 @@ router.post('/folder', auth, (req, res) => {
     }
 });
 
-// 4. Télécharger / Aperçu
-router.get('/download', auth, (req, res) => {
-    const filePath = req.query.filePath;
-    const fullPath = path.join(UPLOADS_ROOT, filePath);
-
-    // 🛡️ Bloquer si l'utilisateur tente d'accéder à users.json
-    if (path.basename(fullPath).toLowerCase() === 'users.json') {
-        return res.status(403).send('Accès interdit.');
+// 4. Renommer un fichier ou un dossier
+router.put('/rename', auth, (req, res) => {
+    const { itemPath, newName } = req.body;
+    if (!itemPath || !newName || typeof newName !== 'string') {
+        return res.status(400).json({ error: 'Paramètres invalides.' });
     }
 
-    if (!fullPath.startsWith(UPLOADS_ROOT) || !fs.existsSync(fullPath)) {
+    const safeName = newName.replace(/[/\\\0]/g, '_').trim();
+    if (!safeName || safeName === '.' || safeName === '..') {
+        return res.status(400).json({ error: 'Nom invalide.' });
+    }
+
+    const oldFull = resolveSafe(itemPath);
+    if (!oldFull || !fs.existsSync(oldFull)) {
+        return res.status(404).json({ error: 'Élément introuvable.' });
+    }
+    if (oldFull === UPLOADS_ROOT) {
+        return res.status(403).json({ error: 'Impossible de renommer la racine.' });
+    }
+    // 🛡️ Interdire de renommer en fichier sensible (users.json, .env, ...)
+    if (SENSITIVE_FILES.includes(safeName.toLowerCase())) {
+        return res.status(403).json({ error: 'Ce nom est interdit.' });
+    }
+
+    const newFull = path.resolve(path.dirname(oldFull), safeName);
+    if (!isInside(UPLOADS_ROOT, newFull)) {
+        return res.status(400).json({ error: 'Chemin interdit.' });
+    }
+    if (fs.existsSync(newFull)) {
+        return res.status(400).json({ error: 'Un élément porte déjà ce nom.' });
+    }
+
+    try {
+        fs.renameSync(oldFull, newFull);
+        res.json({ message: 'Élément renommé.' });
+    } catch (err) {
+        res.status(500).json({ error: 'Impossible de renommer l\'élément (erreur de permission).' });
+    }
+});
+
+// 5. Télécharger / Aperçu
+router.get('/download', auth, (req, res) => {
+    const fullPath = resolveSafe(req.query.filePath);
+
+    if (!fullPath || !fs.existsSync(fullPath) || fs.statSync(fullPath).isDirectory()) {
         return res.status(404).send('Fichier introuvable.');
+    }
+
+    // 🛡️ Bloquer les fichiers sensibles (users.json, .env, ...)
+    if (isSensitive(fullPath)) {
+        return res.status(403).send('Accès interdit.');
     }
 
     if (req.query.preview === 'true') {
@@ -114,18 +178,24 @@ router.get('/download', auth, (req, res) => {
 
 // 5. Supprimer
 router.delete('/', auth, (req, res) => {
-    const { itemPath } = req.body;
-    const fullPath = path.join(UPLOADS_ROOT, itemPath);
+    const fullPath = resolveSafe(req.body?.itemPath);
 
-    if (fullPath.startsWith(UPLOADS_ROOT) && fs.existsSync(fullPath)) {
-        try {
-            fs.rmSync(fullPath, { recursive: true, force: true });
-            return res.json({ message: 'Élément supprimé.' });
-        } catch (err) {
-            return res.status(500).json({ error: 'Impossible de supprimer l\'élément (erreur de permission).' });
-        }
+    if (!fullPath) {
+        return res.status(400).json({ error: 'Chemin interdit.' });
     }
-    res.json({ message: 'Élément supprimé.' });
+    if (!fs.existsSync(fullPath)) {
+        return res.status(404).json({ error: 'Élément introuvable.' });
+    }
+    if (fullPath === UPLOADS_ROOT) {
+        return res.status(403).json({ error: 'Impossible de supprimer la racine.' });
+    }
+
+    try {
+        fs.rmSync(fullPath, { recursive: true, force: true });
+        return res.json({ message: 'Élément supprimé.' });
+    } catch (err) {
+        return res.status(500).json({ error: 'Impossible de supprimer l\'élément (erreur de permission).' });
+    }
 });
 
 module.exports = router;

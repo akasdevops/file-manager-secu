@@ -6,9 +6,11 @@ services:
     container_name: cloudspace_app
     ports:
       - "8080:8080"
+    environment:
+      - DATA_DIR=/app/data
     env_file:
       - .env
     volumes:
       - ./uploads:/app/uploads
-      - ./users.json:/app/users.json
+      - ./data:/app/data
     restart: unless-stopped

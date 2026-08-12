@@ -11,12 +11,22 @@ router.post('/register', async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'Identifiants incomplets.' });
 
+    // 🛡️ Validation du nom d'utilisateur
+    const cleanUsername = String(username).trim();
+    if (!/^[a-zA-Z0-9_.-]{3,32}$/.test(cleanUsername)) {
+        return res.status(400).json({ error: 'Nom d\'utilisateur invalide (3 à 32 caractères : lettres, chiffres, _ . -).' });
+    }
+    // 🛡️ Validation du mot de passe (minimum 8 caractères)
+    if (typeof password !== 'string' || password.length < 8) {
+        return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 8 caractères.' });
+    }
+
     const db = readData();
     if (!db.settings.allowPublicRegister) {
         return res.status(403).json({ error: 'Les inscriptions sont actuellement fermées.' });
     }
 
-    if (db.users.find(u => u.username.toLowerCase() === username.toLowerCase())) {
+    if (db.users.find(u => u.username.toLowerCase() === cleanUsername.toLowerCase())) {
         return res.status(400).json({ error: 'Cet utilisateur existe déjà.' });
     }
 
@@ -25,7 +35,7 @@ router.post('/register', async (req, res) => {
 
     const newUser = {
         id: Date.now().toString(),
-        username,
+        username: cleanUsername,
         password: hashedPassword,
         role: isFirstUser ? 'ADMIN' : 'USER',
         status: (isFirstUser || !db.settings.requireAdminApproval) ? 'APPROVED' : 'PENDING',
@@ -62,7 +72,7 @@ router.post('/login', async (req, res) => {
 
     const token = jwt.sign(
         { id: user.id, username: user.username, role: user.role },
-        process.env.JWT_SECRET || 'secret_fallback',
+        process.env.JWT_SECRET,
         { expiresIn: '24h' }
     );
 

@@ -1,14 +1,16 @@
 const jwt = require('jsonwebtoken');
 
 module.exports = function authMiddleware(req, res, next) {
-    let token = req.headers.authorization?.split(' ')[1] || req.query.token;
+    // 🔒 Le token est fourni UNIQUEMENT via l'en-tête Authorization (jamais dans l'URL)
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
 
     if (!token) {
         return res.status(401).json({ error: 'Accès non autorisé : Token manquant.' });
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_fallback');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decoded;
         next();
     } catch (err) {

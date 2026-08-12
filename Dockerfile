@@ -14,7 +14,7 @@ RUN npm ci --only=production
 COPY . .
 
 # Déclarer les volumes pour conserver la BDD et les uploads sur l'hôte
-VOLUME ["/app/uploads", "/app/data/users.json"]
+VOLUME ["/app/uploads", "/app/data"]
 
 # Exposition du port de l'application
 EXPOSE 8080

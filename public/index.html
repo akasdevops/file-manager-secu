@@ -351,70 +351,6 @@
             </div>
         </div>
     </div>
-    <!-- 🚀 TABLEAU DE BORD RACINE (Visible uniquement à la racine) -->
-    <div id="root-dashboard" class="hidden mb-8 space-y-6">
-
-        <!-- 1. En-tête de bienvenue & Quota -->
-        <div
-            class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-2xl shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
-            <div>
-                <h2 class="text-2xl font-bold">Bienvenue sur votre Cloud ☁️</h2>
-                <p class="text-blue-100 text-sm mt-1">Espace de stockage NAS connecté et sécurisé.</p>
-            </div>
-
-            <!-- Widget Stockage -->
-            <div class="bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20 w-full md:w-72">
-                <div class="flex justify-between text-xs font-semibold mb-1">
-                    <span>Stockage Utilisé</span>
-                    <span id="dash-quota-text">0 MB / 500 MB</span>
-                </div>
-                <div class="w-full bg-white/20 rounded-full h-2 overflow-hidden">
-                    <div id="dash-quota-bar" class="bg-emerald-400 h-full rounded-full transition-all duration-500"
-                        style="width: 0%"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 2. Raccourcis / Filtres rapides -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <button onclick="filterByCategory('images')"
-                class="p-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl flex items-center gap-3 transition">
-                <span class="p-2 bg-purple-500/10 text-purple-400 rounded-lg">🖼️</span>
-                <div class="text-left">
-                    <p class="text-xs text-slate-400">Filtre</p>
-                    <p class="text-sm font-semibold text-slate-200">Images</p>
-                </div>
-            </button>
-
-            <button onclick="filterByCategory('documents')"
-                class="p-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl flex items-center gap-3 transition">
-                <span class="p-2 bg-blue-500/10 text-blue-400 rounded-lg">📄</span>
-                <div class="text-left">
-                    <p class="text-xs text-slate-400">Filtre</p>
-                    <p class="text-sm font-semibold text-slate-200">Documents</p>
-                </div>
-            </button>
-
-            <button onclick="filterByCategory('media')"
-                class="p-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl flex items-center gap-3 transition">
-                <span class="p-2 bg-pink-500/10 text-pink-400 rounded-lg">🎬</span>
-                <div class="text-left">
-                    <p class="text-xs text-slate-400">Filtre</p>
-                    <p class="text-sm font-semibold text-slate-200">Médias</p>
-                </div>
-            </button>
-
-            <button onclick="filterByCategory('all')"
-                class="p-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl flex items-center gap-3 transition">
-                <span class="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg">📂</span>
-                <div class="text-left">
-                    <p class="text-xs text-slate-400">Afficher</p>
-                    <p class="text-sm font-semibold text-slate-200">Tout voir</p>
-                </div>
-            </button>
-        </div>
-
-    </div>
 
     <script>
         let token = localStorage.getItem('token');
@@ -422,6 +358,15 @@
         let isRegister = false;
         let currentPath = '';
         let allItems = [];
+
+        // 🛡️ Échappement HTML pour prévenir les XSS via noms de fichiers
+        function esc(s) {
+            return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+        }
+        // 🛡️ Chaîne JS dans un attribut HTML (onclick) : JSON.stringify + échappement des guillemets
+        function jsStr(s) {
+            return JSON.stringify(String(s)).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+        }
 
         function toggleTheme() {
             const isDark = document.documentElement.classList.toggle('dark');
@@ -522,9 +467,9 @@
                 const isLast = idx === parts.length - 1;
                 breadcrumbHTML += ` <span class="text-slate-300 dark:text-slate-700 font-normal">/</span> `;
                 if (isLast) {
-                    breadcrumbHTML += `<span class="text-slate-900 dark:text-white font-extrabold">${p}</span>`;
+                    breadcrumbHTML += `<span class="text-slate-900 dark:text-white font-extrabold">${esc(p)}</span>`;
                 } else {
-                    breadcrumbHTML += `<span class="cursor-pointer text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold transition duration-200" onclick="loadFiles('${target}')">${p}</span>`;
+                    breadcrumbHTML += `<span class="cursor-pointer text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold transition duration-200" onclick="loadFiles(${jsStr(target)})">${esc(p)}</span>`;
                 }
             });
             document.getElementById('breadcrumb').innerHTML = breadcrumbHTML;
@@ -598,9 +543,9 @@
                 const isLast = idx === parts.length - 1;
                 breadcrumbHTML += ` <span class="text-slate-300 dark:text-slate-700 font-normal">/</span> `;
                 if (isLast) {
-                    breadcrumbHTML += `<span class="text-slate-900 dark:text-white font-extrabold">${p}</span>`;
+                    breadcrumbHTML += `<span class="text-slate-900 dark:text-white font-extrabold">${esc(p)}</span>`;
                 } else {
-                    breadcrumbHTML += `<span class="cursor-pointer text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold transition duration-200" onclick="loadFiles('${target}')">${p}</span>`;
+                    breadcrumbHTML += `<span class="cursor-pointer text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold transition duration-200" onclick="loadFiles(${jsStr(target)})">${esc(p)}</span>`;
                 }
             });
             document.getElementById('breadcrumb').innerHTML = breadcrumbHTML;
@@ -646,7 +591,7 @@
                     let toggleIcon = '';
                     if (item.isDirectory) {
                         const iconName = item.isExpanded ? 'chevron-down' : 'chevron-right';
-                        toggleIcon = `<i data-lucide="${iconName}" class="w-4 h-4 text-slate-400 dark:text-slate-500 cursor-pointer hover:text-blue-500 transition" onclick="event.stopPropagation(); toggleFolder('${item.path}')"></i>`;
+                        toggleIcon = `<i data-lucide="${iconName}" class="w-4 h-4 text-slate-400 dark:text-slate-500 cursor-pointer hover:text-blue-500 transition" onclick="event.stopPropagation(); toggleFolder(${jsStr(item.path)})"></i>`;
                     } else {
                         toggleIcon = `<span class="w-4 h-4 inline-block"></span>`;
                     }
@@ -657,21 +602,22 @@
                         : 'hover:bg-slate-100/70 dark:hover:bg-slate-800/50';
 
                     rowsHtml.push(`
-        <tr class="file-row ${rowClass} transition cursor-pointer" onclick="handleRowClick('${item.path}', ${item.isDirectory})">
+        <tr class="file-row ${rowClass} transition cursor-pointer" data-filename="${esc(item.name)}" data-isdir="${item.isDirectory}" onclick="handleRowClick(${jsStr(item.path)}, ${item.isDirectory})">
           <td class="p-3.5 font-bold text-slate-900 dark:text-white">
             <div class="flex items-center gap-3" style="padding-left: ${item.level * 24}px">
               ${toggleIcon}
               ${getFileBadge(item.name, item.isDirectory)}
               <span class="${item.isDirectory ? 'font-extrabold' : ''} text-slate-900 dark:text-white">
-                    ${item.name}
+                    ${esc(item.name)}
               </span>
             </div>
           </td>
           <td class="p-3.5 text-slate-600 dark:text-slate-400 font-mono text-xs font-bold">${sizeText}</td>
           <td class="p-3.5 text-right space-x-1.5" onclick="event.stopPropagation()">
-            ${!item.isDirectory ? `<button onclick="previewFile('${item.path}', '${item.name}')" class="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/30 rounded-xl text-xs font-bold transition active:scale-95">Aperçu</button>` : ''}
-            ${!item.isDirectory ? `<button onclick="downloadFile('${item.path}')" class="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/20 dark:text-emerald-300 dark:hover:bg-emerald-500/30 rounded-xl text-xs font-bold transition active:scale-95">Télécharger</button>` : ''}
-            <button onclick="deleteItem('${item.path}')" class="px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/30 rounded-xl text-xs font-bold transition active:scale-95">Supprimer</button>
+            ${!item.isDirectory ? `<button onclick="previewFile(${jsStr(item.path)}, ${jsStr(item.name)})" class="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/30 rounded-xl text-xs font-bold transition active:scale-95">Aperçu</button>` : ''}
+            ${!item.isDirectory ? `<button onclick="downloadFile(${jsStr(item.path)})" class="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/20 dark:text-emerald-300 dark:hover:bg-emerald-500/30 rounded-xl text-xs font-bold transition active:scale-95">Télécharger</button>` : ''}
+            <button onclick="renameItem(${jsStr(item.path)})" class="px-3 py-1.5 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 dark:bg-cyan-500/20 dark:text-cyan-300 dark:hover:bg-cyan-500/30 rounded-xl text-xs font-bold transition active:scale-95">Renommer</button>
+            <button onclick="deleteItem(${jsStr(item.path)})" class="px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/30 rounded-xl text-xs font-bold transition active:scale-95">Supprimer</button>
           </td>
         </tr>`);
 
@@ -797,8 +743,55 @@
             }
         }
 
-        function downloadFile(filePath) {
-            window.location.href = `/api/files/download?filePath=${encodeURIComponent(filePath)}&token=${localStorage.getItem('token')}`;
+        async function downloadFile(filePath) {
+            const res = await fetch(`/api/files/download?filePath=${encodeURIComponent(filePath)}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            if (!res.ok) {
+                const txt = await res.text().catch(() => '');
+                alert(txt || 'Impossible de télécharger le fichier.');
+                return;
+            }
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filePath.split('/').pop() || 'fichier';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        // Renommer un élément
+        async function renameItem(itemPath) {
+            const oldName = itemPath.split('/').pop();
+            const newName = prompt('Nouveau nom :', oldName);
+            if (!newName || newName === oldName) return;
+
+            const res = await fetch('/api/files/rename', {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ itemPath, newName })
+            });
+            const data = await res.json();
+            if (!res.ok) { alert(data.error || 'Erreur lors du renommage.'); return; }
+
+            const parts = itemPath.split('/');
+            parts.pop();
+            const parentPath = parts.join('/');
+
+            // Recharger le parent
+            if (parentPath === '') {
+                loadFiles('');
+            } else {
+                const item = findItemByPath(allItems, parentPath);
+                if (item) {
+                    item.children = null;
+                    item.isExpanded = false;
+                    await toggleFolder(parentPath);
+                }
+            }
         }
 
         // Supprimer un élément
@@ -834,21 +827,33 @@
             modalContent.innerHTML = `<p class="text-xs font-bold text-slate-500">Chargement...</p>`;
             modal.classList.remove('hidden');
 
-            const fileUrl = `/api/files/download?filePath=${encodeURIComponent(filePath)}&preview=true&token=${localStorage.getItem('token')}`;
+            const fileUrl = `/api/files/download?filePath=${encodeURIComponent(filePath)}&preview=true`;
+            const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
             const ext = fileName.split('.').pop().toLowerCase();
+            const onErr = () => { modalContent.innerHTML = `<p class="text-xs font-bold text-rose-500">Impossible de charger le fichier.</p>`; };
 
             if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext)) {
-                modalContent.innerHTML = `<img src="${fileUrl}" class="max-h-[65vh] max-w-full rounded-2xl object-contain shadow-md" />`;
+                const res = await fetch(fileUrl, { headers });
+                if (!res.ok) return onErr();
+                const url = URL.createObjectURL(await res.blob());
+                modalContent.innerHTML = `<img src="${url}" class="max-h-[65vh] max-w-full rounded-2xl object-contain shadow-md" />`;
             } else if (['mp4', 'webm'].includes(ext)) {
-                modalContent.innerHTML = `<video src="${fileUrl}" controls class="max-h-[65vh] w-full rounded-2xl"></video>`;
+                const res = await fetch(fileUrl, { headers });
+                if (!res.ok) return onErr();
+                const url = URL.createObjectURL(await res.blob());
+                modalContent.innerHTML = `<video src="${url}" controls class="max-h-[65vh] w-full rounded-2xl"></video>`;
             } else if (['pdf'].includes(ext)) {
-                modalContent.innerHTML = `<iframe src="${fileUrl}" class="w-full h-[65vh] rounded-2xl border-0"></iframe>`;
+                const res = await fetch(fileUrl, { headers });
+                if (!res.ok) return onErr();
+                const url = URL.createObjectURL(await res.blob());
+                modalContent.innerHTML = `<iframe src="${url}" class="w-full h-[65vh] rounded-2xl border-0"></iframe>`;
             } else if (['txt', 'js', 'json', 'html', 'css', 'py'].includes(ext)) {
-                const res = await fetch(fileUrl);
+                const res = await fetch(fileUrl, { headers });
+                if (!res.ok) return onErr();
                 const text = await res.text();
-                modalContent.innerHTML = `<pre class="w-full p-4 bg-slate-900 text-slate-100 text-xs font-mono rounded-2xl overflow-x-auto border border-slate-800 max-h-[65vh]">${text.replace(/</g, "&lt;")}</pre>`;
+                modalContent.innerHTML = `<pre class="w-full p-4 bg-slate-900 text-slate-100 text-xs font-mono rounded-2xl overflow-x-auto border border-slate-800 max-h-[65vh]">${esc(text)}</pre>`;
             } else {
-                modalContent.innerHTML = `<div class="text-center space-y-3"><p class="text-xs text-slate-500 font-bold">Aperçu direct non disponible pour ce type de fichier.</p><button onclick="downloadFile('${filePath}')" class="px-4 py-2 bg-blue-600 text-white text-xs rounded-xl font-bold shadow-md shadow-blue-500/20">Télécharger le fichier</button></div>`;
+                modalContent.innerHTML = `<div class="text-center space-y-3"><p class="text-xs text-slate-500 font-bold">Aperçu direct non disponible pour ce type de fichier.</p><button onclick="downloadFile(${jsStr(filePath)})" class="px-4 py-2 bg-blue-600 text-white text-xs rounded-xl font-bold shadow-md shadow-blue-500/20">Télécharger le fichier</button></div>`;
             }
         }
 
@@ -882,14 +887,14 @@
 
                     tbody.innerHTML += `
           <tr class="p-3.5 border-b border-slate-200 dark:border-slate-800">
-            <td class="p-3.5 font-bold text-slate-900 dark:text-white">${u.username}</td>
-            <td class="p-3.5"><span class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-300">${u.role}</span></td>
-            <td class="p-3.5"><span class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg ${isApproved ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300'}">${u.status}</span></td>
+            <td class="p-3.5 font-bold text-slate-900 dark:text-white">${esc(u.username)}</td>
+            <td class="p-3.5"><span class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-300">${esc(u.role)}</span></td>
+            <td class="p-3.5"><span class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg ${isApproved ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300'}">${esc(u.status)}</span></td>
             <td class="p-3.5 text-xs font-mono font-bold text-slate-600 dark:text-slate-400">${(u.usedBytes / (1024 * 1024)).toFixed(1)} / ${u.quotaMB} MB</td>
             <td class="p-3.5 text-right space-x-1.5">
-              ${(!isApproved) ? `<button onclick="updateUserStatus('${u.id}', 'APPROVED')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg shadow-sm">Approuver</button>` : ''}
-              ${(isApproved && !isLoggedUser) ? `<button onclick="updateUserStatus('${u.id}', 'DISABLED')" class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold rounded-lg shadow-sm">Désactiver</button>` : ''}
-              ${!isLoggedUser ? `<button onclick="deleteUser('${u.id}', '${u.username}')" class="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold rounded-lg shadow-sm">Supprimer</button>` : ''}
+              ${(!isApproved) ? `<button onclick="updateUserStatus(${jsStr(u.id)}, 'APPROVED')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg shadow-sm">Approuver</button>` : ''}
+              ${(isApproved && !isLoggedUser) ? `<button onclick="updateUserStatus(${jsStr(u.id)}, 'DISABLED')" class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold rounded-lg shadow-sm">Désactiver</button>` : ''}
+              ${!isLoggedUser ? `<button onclick="deleteUser(${jsStr(u.id)}, ${jsStr(u.username)})" class="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold rounded-lg shadow-sm">Supprimer</button>` : ''}
             </td>
           </tr>`;
                 });
@@ -932,52 +937,6 @@
             const data = await res.json();
             alert(data.message || data.error);
             if (res.ok) { document.getElementById('oldPass').value = ''; document.getElementById('newPass').value = ''; }
-        }
-        function renderExplorer(data, currentPath) {
-            const dashboardEl = document.getElementById('root-dashboard');
-
-            // 🎯 Si on est à la racine (''), on affiche le Dashboard
-            if (!currentPath || currentPath === '') {
-                dashboardEl.classList.remove('hidden');
-
-                // Mise à jour du widget de stockage
-                const usedMB = (data.usedBytes / (1024 * 1024)).toFixed(1);
-                const quotaMB = (data.quotaBytes / (1024 * 1024)).toFixed(0);
-                const percent = Math.min(100, ((data.usedBytes / data.quotaBytes) * 100)).toFixed(1);
-
-                document.getElementById('dash-quota-text').innerText = `${usedMB} MB / ${quotaMB} MB`;
-                document.getElementById('dash-quota-bar').style.width = `${percent}%`;
-            } else {
-                // 🎯 Si on est dans un sous-dossier, on masque le Dashboard pour garder une vue épurée
-                dashboardEl.classList.add('hidden');
-            }
-
-            // Rendu de la liste des fichiers/dossiers
-            renderFileList(data.items);
-        }
-
-        // 🔍 Fonction de filtrage par catégorie
-        function filterByCategory(category) {
-            const rows = document.querySelectorAll('.file-row'); // Classe sur vos lignes <tr> de tableau
-
-            rows.forEach(row => {
-                const fileName = row.dataset.filename.toLowerCase();
-                const isDir = row.dataset.isdir === 'true';
-
-                if (category === 'all' || isDir) {
-                    row.style.display = '';
-                    return;
-                }
-
-                const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(fileName);
-                const isDoc = /\.(pdf|doc|docx|txt|md|xls|xlsx)$/i.test(fileName);
-                const isMedia = /\.(mp4|mkdir|mp3|avi|mov)$/i.test(fileName);
-
-                if (category === 'images' && isImage) row.style.display = '';
-                else if (category === 'documents' && isDoc) row.style.display = '';
-                else if (category === 'media' && isMedia) row.style.display = '';
-                else row.style.display = 'none';
-            });
         }
 
         init();
