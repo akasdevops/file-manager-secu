@@ -98,6 +98,22 @@ router.put('/users/:id/status', (req, res) => {
     res.json({ message: 'Statut mis à jour.' });
 });
 
+// Réinitialiser le mot de passe d'un utilisateur
+router.put('/users/:id/password', async (req, res) => {
+    const db = readData();
+    const user = db.users.find(u => u.id === req.params.id);
+    if (!user) return res.status(404).json({ error: 'Utilisateur introuvable.' });
+
+    const newPassword = req.body.password;
+    if (typeof newPassword !== 'string' || newPassword.length < 8) {
+        return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 8 caractères.' });
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    saveData(db);
+    res.json({ message: 'Mot de passe réinitialisé avec succès.' });
+});
+
 router.delete('/users/:id', (req, res) => {
     const db = readData();
     const user = db.users.find(u => u.id === req.params.id);
