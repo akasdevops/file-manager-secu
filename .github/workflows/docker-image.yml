@@ -2,9 +2,9 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "file-manager-secu" ]
+    branches: [ "filemanager" ]
   pull_request:
-    branches: [ "file-manager-secu" ]
+    branches: [ "filemanager" ]
 
 jobs:
 
