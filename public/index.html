@@ -512,11 +512,6 @@
             document.getElementById('quotaText').innerText = `${usedMB} / ${quotaMB} MB`;
             document.getElementById('quotaBar').style.width = `${pct}%`;
 
-            // Statistiques rapides
-            document.getElementById('statCount').innerText = allItems.filter(i => !i.isDirectory).length;
-            document.getElementById('statFolders').innerText = allItems.filter(i => i.isDirectory).length;
-            document.getElementById('statSize').innerText = `${usedMB} MB`;
-
             // Fil d'Ariane
             const parts = path.split('/').filter(Boolean);
             let breadcrumbHTML = `<span class="flex items-center gap-1.5 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold transition duration-200" onclick="loadFiles('')"><i data-lucide="home" class="w-4 h-4"></i> Racine</span>`;
@@ -694,7 +689,31 @@
                 tbody.innerHTML = rowsHtml.join('');
             }
             
+            updateQuickStats();
             lucide.createIcons();
+        }
+
+        // Mise à jour dynamique des statistiques rapides pour le dossier courant sélectionné
+        function updateQuickStats() {
+            let targetList = [];
+            if (currentPath === '') {
+                targetList = allItems;
+            } else {
+                const item = findItemByPath(allItems, currentPath);
+                if (item) {
+                    targetList = item.children || [];
+                }
+            }
+
+            const filesCount = targetList.filter(i => !i.isDirectory).length;
+            const foldersCount = targetList.filter(i => i.isDirectory).length;
+            
+            const sizeBytes = targetList.filter(i => !i.isDirectory).reduce((acc, curr) => acc + curr.size, 0);
+            const sizeMB = (sizeBytes / (1024 * 1024)).toFixed(1);
+
+            document.getElementById('statCount').innerText = filesCount;
+            document.getElementById('statFolders').innerText = foldersCount;
+            document.getElementById('statSize').innerText = `${sizeMB} MB`;
         }
 
         // Filtre récursif dans l'arborescence actuellement chargée
