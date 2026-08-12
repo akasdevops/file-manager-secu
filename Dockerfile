@@ -14,10 +14,10 @@ RUN npm ci --only=production
 COPY . .
 
 # Déclarer les volumes pour conserver la BDD et les uploads sur l'hôte
-VOLUME ["/app/uploads", "/app/users.json"]
+VOLUME ["/app/uploads", "/app/data/users.json"]
 
 # Exposition du port de l'application
-EXPOSE 3000
+EXPOSE 8080
 
 # Commande de démarrage
 CMD ["node", "src/server.js"]
