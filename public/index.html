@@ -248,14 +248,6 @@
                     </label>
                 </div>
 
-                <!-- ZONE DRAG & DROP -->
-                <div id="dropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
-                    ondrop="handleDrop(event)"
-                    class="border-2 border-dashed border-blue-400/60 dark:border-blue-500/40 bg-blue-50/50 dark:bg-blue-950/20 rounded-2xl p-6 text-center cursor-pointer mb-6 transition hover:border-blue-500 hover:bg-blue-50">
-                    <p class="text-xs font-bold text-blue-700 dark:text-blue-300">Glissez-déposez vos documents
-                        directement ici</p>
-                </div>
-
                 <!-- LISTE DE FICHIERS AVEC HIGH-CONTRAST & COULEURS -->
                 <div
                     class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
@@ -710,13 +702,6 @@
                     await toggleFolder(currentPath);
                 }
             }
-        }
-
-        function handleDragOver(e) { e.preventDefault(); }
-        function handleDragLeave(e) { e.preventDefault(); }
-        function handleDrop(e) {
-            e.preventDefault();
-            if (e.dataTransfer.files?.length) uploadFiles(e.dataTransfer.files);
         }
 
         // Créer un dossier
