@@ -20,4 +20,4 @@ VOLUME ["/app/uploads", "/app/users.json"]
 EXPOSE 3000
 
 # Commande de démarrage
-CMD ["node", "server.js"]
+CMD ["node", "src/server.js"]
