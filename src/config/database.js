@@ -93,7 +93,10 @@ function initDatabase() {
     ensureDataDir();
 
     const main = tryLoad(DB_PATH);
-    if (main) return;
+    if (main) {
+        console.log('🔐 users.json chargé : chiffrement AES-256-GCM actif.');
+        return;
+    }
 
     const bak = tryLoad(BACKUP_PATH);
     if (bak) {
