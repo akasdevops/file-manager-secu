@@ -1,8 +1,14 @@
-# Utilisation d'une image Node.js légère
-FROM node:20-alpine
+# Utilisation d'une image Node.js LTS légère (Alpine)
+FROM node:22-alpine
 
 # Création du répertoire de travail
 WORKDIR /app
+
+# Mode production (optimisations + vérification stricte de JWT_SECRET au démarrage)
+ENV NODE_ENV=production
+
+# Mise à jour des paquets de la couche Alpine (corrige les CVE de busybox/musl/openssl...)
+RUN apk upgrade --no-cache
 
 # Copie uniquement les fichiers de dépendances
 COPY package.json package-lock.json ./
