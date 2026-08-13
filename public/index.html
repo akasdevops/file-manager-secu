@@ -195,11 +195,17 @@
                             class="mt-3.5 flex flex-wrap items-center gap-2 bg-white/80 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 px-4 py-2 rounded-2xl shadow-sm text-sm font-semibold w-fit transition-all duration-300 hover:shadow">
                             /</div>
                     </div>
-                    <div class="relative">
-                        <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3 text-slate-400"></i>
-                        <input type="text" id="searchInput" onkeyup="filterFiles()"
-                            placeholder="Rechercher un fichier..."
-                            class="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-white outline-none focus:border-blue-500 w-64 shadow-sm transition">
+                    <div class="flex items-center gap-2">
+                        <div class="relative">
+                            <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3 text-slate-400"></i>
+                            <input type="text" id="searchInput" onkeyup="filterFiles()"
+                                placeholder="Rechercher un fichier..."
+                                class="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-white outline-none focus:border-blue-500 w-64 shadow-sm transition">
+                        </div>
+                        <button onclick="refreshFiles()" id="refreshBtn" title="Actualiser la liste"
+                            class="p-2.5 bg-gradient-to-tr from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white rounded-xl shadow-md shadow-purple-500/30 transition active:scale-95">
+                            <i data-lucide="refresh-cw" id="refreshIcon" class="w-4 h-4"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -330,6 +336,9 @@
                         <div class="flex gap-2">
                             <input type="number" id="newUserQuota" placeholder="Quota (Mo)" value="500" min="1"
                                 class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white">
+                            <label class="flex items-center gap-1.5 px-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-bold text-slate-600 dark:text-slate-300 cursor-pointer select-none shrink-0" title="Autoriser à renommer/supprimer des dossiers">
+                                <input type="checkbox" id="newUserDirRights" class="w-3.5 h-3.5 accent-emerald-600"> Dossiers
+                            </label>
                             <button onclick="createUser()"
                                 class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition active:scale-95 shadow-md shrink-0">Créer</button>
                         </div>
@@ -346,6 +355,7 @@
                                 <th class="p-4">Rôle</th>
                                 <th class="p-4">Statut</th>
                                 <th class="p-4">Stockage</th>
+                                <th class="p-4">Dossiers</th>
                                 <th class="p-4 text-right">Actions</th>
                             </tr>
                         </thead>
@@ -515,6 +525,20 @@
         }
 
         function logout() { storage.clear(); location.reload(); }
+
+        // 🔄 Actualiser la liste des fichiers (garde la position courante)
+        async function refreshFiles() {
+            const btn = document.getElementById('refreshBtn');
+            const icon = document.getElementById('refreshIcon');
+            btn.disabled = true;
+            icon.classList.add('animate-spin');
+            try {
+                await loadFiles(currentPath);
+            } finally {
+                btn.disabled = false;
+                icon.classList.remove('animate-spin');
+            }
+        }
 
         async function loadFiles(path = '') {
             currentPath = path;
@@ -698,8 +722,8 @@
           <td class="p-3.5 text-right space-x-1.5" onclick="event.stopPropagation()">
             ${!item.isDirectory ? `<button onclick="previewFile(${jsStr(item.path)}, ${jsStr(item.name)})" class="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/30 rounded-xl text-xs font-bold transition active:scale-95">Aperçu</button>` : ''}
             ${!item.isDirectory ? `<button onclick="downloadFile(${jsStr(item.path)})" class="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/20 dark:text-emerald-300 dark:hover:bg-emerald-500/30 rounded-xl text-xs font-bold transition active:scale-95">Télécharger</button>` : ''}
-            ${(!item.isDirectory || user.role === 'ADMIN') ? `<button onclick="renameItem(${jsStr(item.path)}, ${item.isDirectory})" class="px-3 py-1.5 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 dark:bg-cyan-500/20 dark:text-cyan-300 dark:hover:bg-cyan-500/30 rounded-xl text-xs font-bold transition active:scale-95">Renommer</button>` : ''}
-            ${(!item.isDirectory || user.role === 'ADMIN') ? `<button onclick="deleteItem(${jsStr(item.path)}, ${item.isDirectory})" class="px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/30 rounded-xl text-xs font-bold transition active:scale-95">Supprimer</button>` : ''}
+            ${(!item.isDirectory || user.role === 'ADMIN' || user.canManageDirs) ? `<button onclick="renameItem(${jsStr(item.path)}, ${item.isDirectory})" class="px-3 py-1.5 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 dark:bg-cyan-500/20 dark:text-cyan-300 dark:hover:bg-cyan-500/30 rounded-xl text-xs font-bold transition active:scale-95">Renommer</button>` : ''}
+            ${(!item.isDirectory || user.role === 'ADMIN' || user.canManageDirs) ? `<button onclick="deleteItem(${jsStr(item.path)}, ${item.isDirectory})" class="px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/30 rounded-xl text-xs font-bold transition active:scale-95">Supprimer</button>` : ''}
           </td>
         </tr>`);
 
@@ -1051,6 +1075,11 @@
             <td class="p-3.5"><span class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-300">${esc(u.role)}</span></td>
             <td class="p-3.5"><span class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg ${isApproved ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300'}">${esc(u.status)}</span></td>
             <td class="p-3.5 text-xs font-mono font-bold text-slate-600 dark:text-slate-400">${(u.usedBytes / (1024 * 1024)).toFixed(1)} / ${u.quotaMB} MB</td>
+            <td class="p-3.5 text-center">
+              ${u.role === 'ADMIN'
+                ? '<span class="text-[10px] font-extrabold text-slate-400 dark:text-slate-500" title="L\'administrateur a toujours ce droit">Toujours</span>'
+                : `<input type="checkbox" class="w-4 h-4 accent-emerald-600 cursor-pointer" ${u.canManageDirs ? 'checked' : ''} onchange="setDirRights(${jsStr(u.id)}, this.checked)" title="Autoriser à renommer/supprimer des dossiers">`}
+            </td>
             <td class="p-3.5 text-right space-x-1.5">
               ${(!isApproved) ? `<button onclick="updateUserStatus(${jsStr(u.id)}, 'APPROVED')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg shadow-sm">Approuver</button>` : ''}
               ${(isApproved && !isLoggedUser) ? `<button onclick="updateUserStatus(${jsStr(u.id)}, 'DISABLED')" class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold rounded-lg shadow-sm">Désactiver</button>` : ''}
@@ -1081,7 +1110,7 @@
             const res = await fetch('/api/admin/users', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${storage.getItem('token')}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password, role, quotaMB })
+                body: JSON.stringify({ username, password, role, quotaMB, canManageDirs: document.getElementById('newUserDirRights').checked })
             });
             const data = await res.json();
             alert(data.message || data.error);
@@ -1089,6 +1118,7 @@
                 document.getElementById('newUserUsername').value = '';
                 document.getElementById('newUserPassword').value = '';
                 document.getElementById('newUserQuota').value = '500';
+                document.getElementById('newUserDirRights').checked = false;
                 loadAdminData();
             }
         }
@@ -1100,6 +1130,17 @@
                 body: JSON.stringify({ status })
             });
             if (res.ok) loadAdminData();
+        }
+
+        // Accorder/retirer le droit de renommer/supprimer des dossiers
+        async function setDirRights(id, checked) {
+            const res = await fetch(`/api/admin/users/${id}/permissions`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${storage.getItem('token')}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ canManageDirs: checked })
+            });
+            const data = await res.json();
+            if (!res.ok) alert(data.error || 'Erreur lors de la mise à jour des droits.');
         }
 
         async function deleteUser(id, username) {

@@ -29,6 +29,16 @@ function isSensitive(p) {
     return parts.some(part => isSensitiveName(part));
 }
 
+// 🔒 L'utilisateur a-t-il le droit de renommer/supprimer des dossiers ?
+// L'admin a toujours ce droit ; les autres doivent l'avoir reçu via canManageDirs.
+// Lecture en base (et non du token) pour que le droit s'applique immédiatement après l'octroi.
+function canManageDirs(req) {
+    if (req.user.role === 'ADMIN') return true;
+    const db = readData();
+    const u = db.users.find(x => x.id === req.user.id);
+    return !!(u && u.canManageDirs);
+}
+
 // 🔎 Résout un chemin utilisateur en chemin absolu sûr (dans UPLOADS_ROOT)
 function resolveSafe(userPath) {
     const clean = (userPath || '').replace(/^[/\\]+/, '').replace(/[/\\]+$/, '');
@@ -182,8 +192,8 @@ router.put('/rename', auth, (req, res) => {
     if (oldFull === UPLOADS_ROOT) {
         return res.status(403).json({ error: 'Impossible de renommer la racine.' });
     }
-    // 🔒 Seul l'administrateur peut renommer un dossier
-    if (fs.statSync(oldFull).isDirectory() && req.user.role !== 'ADMIN') {
+    // 🔒 Seuls les administrateurs et les utilisateurs autorisés peuvent renommer un dossier
+    if (fs.statSync(oldFull).isDirectory() && !canManageDirs(req)) {
         return res.status(403).json({ error: 'Seul l\'administrateur peut renommer un dossier.' });
     }
     // 🛡️ Interdire de renommer en fichier sensible (users.json, .env, ...)
@@ -239,8 +249,8 @@ router.delete('/', auth, (req, res) => {
     if (fullPath === UPLOADS_ROOT) {
         return res.status(403).json({ error: 'Impossible de supprimer la racine.' });
     }
-    // 🔒 Seul l'administrateur peut supprimer un dossier
-    if (fs.statSync(fullPath).isDirectory() && req.user.role !== 'ADMIN') {
+    // 🔒 Seuls les administrateurs et les utilisateurs autorisés peuvent supprimer un dossier
+    if (fs.statSync(fullPath).isDirectory() && !canManageDirs(req)) {
         return res.status(403).json({ error: 'Seul l\'administrateur peut supprimer un dossier.' });
     }
 

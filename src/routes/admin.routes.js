@@ -10,6 +10,7 @@ router.use(auth, admin);
 const ALLOWED_STATUSES = ['APPROVED', 'PENDING', 'DISABLED'];
 const ALLOWED_SETTINGS = ['allowPublicRegister', 'requireAdminApproval'];
 const ALLOWED_ROLES = ['USER', 'ADMIN'];
+const ALLOWED_PERMISSIONS = ['canManageDirs'];
 
 // Paramètres
 router.get('/settings', (req, res) => res.json(readData().settings));
@@ -33,7 +34,7 @@ router.get('/users', (req, res) => {
 
 // Créer un utilisateur (directement approuvé, rôle et quota au choix)
 router.post('/users', async (req, res) => {
-    const { username, password, role, quotaMB } = req.body;
+    const { username, password, role, quotaMB, canManageDirs } = req.body;
 
     if (!username || !password) return res.status(400).json({ error: 'Identifiants incomplets.' });
 
@@ -50,6 +51,7 @@ router.post('/users', async (req, res) => {
     if (!Number.isInteger(newQuota) || newQuota <= 0) {
         newQuota = 500;
     }
+    const newCanManageDirs = typeof canManageDirs === 'boolean' ? canManageDirs : false;
 
     const db = readData();
     if (db.users.find(u => u.username.toLowerCase() === cleanUsername.toLowerCase())) {
@@ -63,13 +65,31 @@ router.post('/users', async (req, res) => {
         password: hashedPassword,
         role: newRole,
         status: 'APPROVED',
-        quotaMB: newQuota
+        quotaMB: newQuota,
+        canManageDirs: newCanManageDirs
     };
 
     db.users.push(newUser);
     saveData(db);
 
     res.json({ message: 'Utilisateur créé avec succès.' });
+});
+
+// 🔒 Droits de gestion des dossiers (renommer/supprimer) accordés par l'administrateur
+router.put('/users/:id/permissions', (req, res) => {
+    const db = readData();
+    const user = db.users.find(u => u.id === req.params.id);
+    if (!user) return res.status(404).json({ error: 'Utilisateur introuvable.' });
+
+    const perm = req.body;
+    for (const key of ALLOWED_PERMISSIONS) {
+        if (typeof perm[key] === 'boolean') {
+            user[key] = perm[key];
+        }
+    }
+
+    saveData(db);
+    res.json({ message: 'Droits mis à jour.' });
 });
 
 router.put('/users/:id/status', (req, res) => {

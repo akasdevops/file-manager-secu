@@ -71,14 +71,14 @@ router.post('/login', async (req, res) => {
     if (!validPass) return res.status(400).json({ error: 'Identifiant ou mot de passe incorrect.' });
 
     const token = jwt.sign(
-        { id: user.id, username: user.username, role: user.role },
+        { id: user.id, username: user.username, role: user.role, canManageDirs: !!user.canManageDirs },
         process.env.JWT_SECRET,
         { expiresIn: '8h' }
     );
 
     res.json({
         token,
-        user: { id: user.id, username: user.username, role: user.role }
+        user: { id: user.id, username: user.username, role: user.role, canManageDirs: !!user.canManageDirs }
     });
 });
 
