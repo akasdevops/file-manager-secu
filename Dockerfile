@@ -4,14 +4,15 @@ FROM node:20-alpine
 # Création du répertoire de travail
 WORKDIR /app
 
-# Copie des fichiers de dépendances
-COPY package*.json ./
+# Copie uniquement les fichiers de dépendances
+COPY package.json package-lock.json ./
 
 # Installation des dépendances de production
 RUN npm ci --only=production
 
-# Copie du reste du code source
-COPY . .
+# Copie uniquement l'essentiel du code source
+COPY public ./public
+COPY src ./src
 
 # Déclarer les volumes pour conserver la BDD et les uploads sur l'hôte
 VOLUME ["/app/uploads", "/app/data"]

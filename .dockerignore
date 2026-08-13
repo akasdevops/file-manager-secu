@@ -5,3 +5,10 @@ data
 users.json
 .env
 .git
+.github
+docker-compose.yml
+Dockerfile
+README.md
+Docs.md
+BesoinSpec.md
+.gitignore
