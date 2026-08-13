@@ -182,6 +182,10 @@ router.put('/rename', auth, (req, res) => {
     if (oldFull === UPLOADS_ROOT) {
         return res.status(403).json({ error: 'Impossible de renommer la racine.' });
     }
+    // 🔒 Seul l'administrateur peut renommer un dossier
+    if (fs.statSync(oldFull).isDirectory() && req.user.role !== 'ADMIN') {
+        return res.status(403).json({ error: 'Seul l\'administrateur peut renommer un dossier.' });
+    }
     // 🛡️ Interdire de renommer en fichier sensible (users.json, .env, ...)
     if (isSensitiveName(safeName)) {
         return res.status(403).json({ error: 'Ce nom est interdit.' });
@@ -234,6 +238,10 @@ router.delete('/', auth, (req, res) => {
     }
     if (fullPath === UPLOADS_ROOT) {
         return res.status(403).json({ error: 'Impossible de supprimer la racine.' });
+    }
+    // 🔒 Seul l'administrateur peut supprimer un dossier
+    if (fs.statSync(fullPath).isDirectory() && req.user.role !== 'ADMIN') {
+        return res.status(403).json({ error: 'Seul l\'administrateur peut supprimer un dossier.' });
     }
 
     try {

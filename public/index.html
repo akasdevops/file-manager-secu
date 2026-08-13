@@ -375,6 +375,30 @@
         </div>
     </div>
 
+    <!-- MODAL D'ACTION (renommer / supprimer) -->
+    <div id="actionModal"
+        class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-4"
+        onclick="if(event.target===this)closeActionModal()">
+        <div
+            class="relative bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-3xl max-w-md w-full overflow-hidden shadow-2xl">
+            <div
+                class="flex items-center justify-between p-4 px-6 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+                <h3 id="actionModalTitle" class="text-sm font-extrabold text-slate-900 dark:text-white">Action</h3>
+                <button onclick="closeActionModal()"
+                    class="p-1.5 text-slate-500 hover:text-slate-900 dark:hover:text-white rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition"><i
+                        data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div id="actionModalBody" class="p-6 space-y-4"></div>
+            <div
+                class="flex items-center justify-end gap-2 p-4 px-6 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700">
+                <button onclick="closeActionModal()"
+                    class="px-4 py-2 bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 rounded-xl text-xs font-bold transition">Annuler</button>
+                <button id="actionModalConfirm" onclick="actionModalConfirm()"
+                    class="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl text-xs font-bold transition">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // 🛡️ Stockage tolérant aux pannes : Edge (Tracking Prevention) peut bloquer
         // localStorage (SecurityError/SyntaxError). On retombe alors sur une mémoire interne
@@ -674,8 +698,8 @@
           <td class="p-3.5 text-right space-x-1.5" onclick="event.stopPropagation()">
             ${!item.isDirectory ? `<button onclick="previewFile(${jsStr(item.path)}, ${jsStr(item.name)})" class="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/30 rounded-xl text-xs font-bold transition active:scale-95">Aperçu</button>` : ''}
             ${!item.isDirectory ? `<button onclick="downloadFile(${jsStr(item.path)})" class="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/20 dark:text-emerald-300 dark:hover:bg-emerald-500/30 rounded-xl text-xs font-bold transition active:scale-95">Télécharger</button>` : ''}
-            <button onclick="renameItem(${jsStr(item.path)})" class="px-3 py-1.5 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 dark:bg-cyan-500/20 dark:text-cyan-300 dark:hover:bg-cyan-500/30 rounded-xl text-xs font-bold transition active:scale-95">Renommer</button>
-            <button onclick="deleteItem(${jsStr(item.path)})" class="px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/30 rounded-xl text-xs font-bold transition active:scale-95">Supprimer</button>
+            ${(!item.isDirectory || user.role === 'ADMIN') ? `<button onclick="renameItem(${jsStr(item.path)}, ${item.isDirectory})" class="px-3 py-1.5 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 dark:bg-cyan-500/20 dark:text-cyan-300 dark:hover:bg-cyan-500/30 rounded-xl text-xs font-bold transition active:scale-95">Renommer</button>` : ''}
+            ${(!item.isDirectory || user.role === 'ADMIN') ? `<button onclick="deleteItem(${jsStr(item.path)}, ${item.isDirectory})" class="px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/30 rounded-xl text-xs font-bold transition active:scale-95">Supprimer</button>` : ''}
           </td>
         </tr>`);
 
@@ -816,11 +840,94 @@
         }
 
         // Renommer un élément
-        async function renameItem(itemPath) {
-            const oldName = itemPath.split('/').pop();
-            const newName = prompt('Nouveau nom :', oldName);
-            if (!newName || newName === oldName) return;
+        // ---- MODAL D'ACTION : renommer / supprimer avec confirmation claire ----
+        let actionModalState = null;
 
+        function renameItem(itemPath, isDir) {
+            openActionModal({ type: 'rename', itemPath, isDir: !!isDir, oldName: itemPath.split('/').pop() });
+        }
+
+        function deleteItem(itemPath, isDir) {
+            openActionModal({ type: 'delete', itemPath, isDir: !!isDir, oldName: itemPath.split('/').pop() });
+        }
+
+        function openActionModal(state) {
+            actionModalState = state;
+            const confirmBtn = document.getElementById('actionModalConfirm');
+            const body = document.getElementById('actionModalBody');
+            const kind = state.isDir ? 'dossier' : 'fichier';
+            const name = state.oldName;
+
+            confirmBtn.classList.remove('bg-rose-600', 'hover:bg-rose-700', 'bg-cyan-500', 'hover:bg-cyan-600', 'opacity-50', 'cursor-not-allowed');
+            confirmBtn.disabled = false;
+
+            if (state.type === 'delete') {
+                document.getElementById('actionModalTitle').textContent = 'Confirmation de suppression';
+                confirmBtn.textContent = 'Supprimer';
+                confirmBtn.classList.add('bg-rose-600', 'hover:bg-rose-700');
+
+                const warn = state.isDir
+                    ? `Vous êtes sur le point de supprimer le <b>dossier</b> « ${esc(name)} ». Tous les fichiers et sous-dossiers qu'il contient seront <b>supprimés définitivement</b>.`
+                    : `Vous êtes sur le point de supprimer le <b>fichier</b> « ${esc(name)} ».`;
+
+                body.innerHTML = `
+                    <div class="text-sm text-slate-600 dark:text-slate-300 font-bold leading-relaxed">${warn}</div>
+                    <div class="flex items-start gap-2 p-3 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 rounded-xl">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 mt-0.5 text-rose-500 shrink-0"></i>
+                        <span class="text-xs text-rose-600 dark:text-rose-300 font-bold">Cette action est irréversible.</span>
+                    </div>
+                    <label class="flex items-start gap-2 cursor-pointer select-none">
+                        <input type="checkbox" id="actionConfirmCheck" class="mt-0.5 w-4 h-4 accent-rose-600" onchange="toggleActionConfirm()">
+                        <span class="text-xs text-slate-600 dark:text-slate-300 font-bold">Je comprends et je confirme la suppression définitive.</span>
+                    </label>`;
+                confirmBtn.disabled = true;
+                confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                document.getElementById('actionModalTitle').textContent = 'Renommer';
+                confirmBtn.textContent = 'Renommer';
+                confirmBtn.classList.add('bg-cyan-500', 'hover:bg-cyan-600');
+
+                body.innerHTML = `
+                    <div class="text-sm text-slate-600 dark:text-slate-300 font-bold leading-relaxed">Vous allez renommer le <b>${kind}</b> « ${esc(name)} ».</div>
+                    <input id="actionRenameInput" type="text" value="${esc(name)}" onkeydown="if(event.key==='Enter')actionModalConfirm()"
+                        class="w-full px-3 py-2 bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500">
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-bold">Saisissez le nouveau nom puis cliquez sur Renommer.</div>`;
+            }
+
+            document.getElementById('actionModal').classList.remove('hidden');
+            lucide.createIcons();
+            const input = document.getElementById('actionRenameInput');
+            if (input) { input.focus(); input.select(); }
+        }
+
+        function toggleActionConfirm() {
+            const checked = document.getElementById('actionConfirmCheck').checked;
+            const btn = document.getElementById('actionModalConfirm');
+            btn.disabled = !checked;
+            btn.classList.toggle('opacity-50', !checked);
+            btn.classList.toggle('cursor-not-allowed', !checked);
+        }
+
+        function closeActionModal() {
+            document.getElementById('actionModal').classList.add('hidden');
+            actionModalState = null;
+        }
+
+        async function actionModalConfirm() {
+            if (!actionModalState) return;
+            const state = actionModalState;
+            closeActionModal();
+
+            if (state.type === 'rename') {
+                const newName = (document.getElementById('actionRenameInput').value || '').trim();
+                if (!newName || newName === state.oldName) return;
+                await doRename(state.itemPath, newName);
+            } else {
+                await doDelete(state.itemPath);
+            }
+        }
+
+        async function doRename(itemPath, newName) {
             const res = await fetch('/api/files/rename', {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${storage.getItem('token')}`, 'Content-Type': 'application/json' },
@@ -847,14 +954,15 @@
         }
 
         // Supprimer un élément
-        async function deleteItem(itemPath) {
-            if (!confirm('Supprimer cet élément ?')) return;
-            await fetch('/api/files', {
+        async function doDelete(itemPath) {
+            const res = await fetch('/api/files', {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${storage.getItem('token')}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ itemPath })
             });
-            
+            const data = await res.json();
+            if (!res.ok) { alert(data.error || 'Erreur lors de la suppression.'); return; }
+
             const parts = itemPath.split('/');
             parts.pop();
             const parentPath = parts.join('/');
