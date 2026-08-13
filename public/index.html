@@ -204,7 +204,9 @@
                         </div>
                         <button onclick="refreshFiles()" id="refreshBtn" title="Actualiser la liste"
                             class="p-2.5 bg-gradient-to-tr from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white rounded-xl shadow-md shadow-purple-500/30 transition active:scale-95">
-                            <i data-lucide="refresh-cw" id="refreshIcon" class="w-4 h-4"></i>
+                            <span id="refreshIcon" class="flex items-center justify-center">
+                                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                            </span>
                         </button>
                     </div>
                 </div>
@@ -534,10 +536,9 @@
             icon.classList.add('animate-spin');
             try {
                 await loadFiles(currentPath);
-            } finally {
-                btn.disabled = false;
-                icon.classList.remove('animate-spin');
-            }
+            } catch (e) { }
+            btn.disabled = false;
+            icon.classList.remove('animate-spin');
         }
 
         async function loadFiles(path = '') {
