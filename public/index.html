@@ -376,6 +376,16 @@
     </div>
 
     <script>
+        // 🔄 Auto-réparation du cache : si la page en cache est périmée (ancienne version du JS),
+        // on vide le stockage et on recharge pour éviter les erreurs de session sur Edge/Chrome
+        const APP_VERSION = 'v2026-08-13';
+        if (localStorage.getItem('app_version') && localStorage.getItem('app_version') !== APP_VERSION) {
+            localStorage.clear();
+            localStorage.setItem('app_version', APP_VERSION);
+            location.reload();
+        }
+        localStorage.setItem('app_version', APP_VERSION);
+
         let token = localStorage.getItem('token');
         let user = JSON.parse(localStorage.getItem('user') || '{}');
         let isRegister = false;
