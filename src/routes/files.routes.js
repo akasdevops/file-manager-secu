@@ -12,6 +12,13 @@ const UPLOADS_ROOT = path.resolve(__dirname, '../../uploads');
 // 🛡️ Fichiers système/sensibles à masquer et bloquer absolument
 const SENSITIVE_FILES = ['users.json', '.env', '.git', '.ds_store', 'thumbs.db', 'node_modules', 'dockerfile', 'docker-compose.yml'];
 
+// 🛡️ Un nom est sensible s'il est listé, s'il commence par "users.json"
+// (backups users.json.bak / .bak.1 / .tmp) ou s'il s'agit d'un fichier caché (.xxx)
+function isSensitiveName(name) {
+    const lower = name.toLowerCase();
+    return SENSITIVE_FILES.includes(lower) || lower.startsWith('users.json') || name.startsWith('.');
+}
+
 function isInside(base, target) {
     const rel = path.relative(base, target);
     return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
@@ -19,7 +26,7 @@ function isInside(base, target) {
 
 function isSensitive(p) {
     const parts = p.split(path.sep);
-    return parts.some(part => SENSITIVE_FILES.includes(part.toLowerCase()));
+    return parts.some(part => isSensitiveName(part));
 }
 
 // 🔎 Résout un chemin utilisateur en chemin absolu sûr (dans UPLOADS_ROOT)
@@ -61,7 +68,7 @@ router.get('/browse', auth, (req, res) => {
     try {
         items = fs.readdirSync(targetDir)
             // 🛡️ Filtre : on masque les fichiers sensibles
-            .filter(name => !SENSITIVE_FILES.includes(name.toLowerCase()))
+            .filter(name => !isSensitiveName(name))
             .map(name => {
                 try {
                     const stat = fs.statSync(path.join(targetDir, name));
@@ -104,7 +111,7 @@ router.get('/search', auth, (req, res) => {
         }
         for (const entry of entries) {
             if (results.length >= MAX_RESULTS) break;
-            if (SENSITIVE_FILES.includes(entry.name.toLowerCase())) continue;
+            if (isSensitiveName(entry.name)) continue;
 
             if (entry.name.toLowerCase().includes(q)) {
                 const itemPath = rel ? `${rel}/${entry.name}` : entry.name;
@@ -176,7 +183,7 @@ router.put('/rename', auth, (req, res) => {
         return res.status(403).json({ error: 'Impossible de renommer la racine.' });
     }
     // 🛡️ Interdire de renommer en fichier sensible (users.json, .env, ...)
-    if (SENSITIVE_FILES.includes(safeName.toLowerCase())) {
+    if (isSensitiveName(safeName)) {
         return res.status(403).json({ error: 'Ce nom est interdit.' });
     }
 
